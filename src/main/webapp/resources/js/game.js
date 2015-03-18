@@ -41,10 +41,17 @@ function startApp()
 	
 	app.explosionImage = new Image();
 	app.explosionImage.src = "resources/images/explosion.png";
-	
-	//	our one and only sound
+
 	app.explosionSound = new Audio();
 	app.explosionSound.src = "resources/audio/explosion.mp3";
+
+    //Background music
+	app.backgroundMusic = new Audio("resources/audio/background.mp3");
+    app.backgroundMusic.addEventListener('ended', function() {
+        this.currentTime = 0;
+        this.play();
+    }, false);
+    app.backgroundMusic.play();
 	
 	//	our master list of objects
 	app.objects = [];

@@ -17,6 +17,8 @@ var app = {
 	explosionTimer : 0,
 	
 	EXPLOSION_MAX_TIME : 2,
+
+	keyboard_dx : 20
 };
 
 //	init
@@ -48,11 +50,13 @@ function startApp()
 	app.objects = [];
 	
 	//	start up with one hero and randomly placed rocks
-	spawnHero();
+	spawnHorton();
 	spawnManyRocks();
 	
 	//	track mouse movement
-	app.canvas.addEventListener('mousemove', myMouseMove, false);
+	app.canvas.addEventListener('mousemove', onMouseOrTouchMove, false);
+	app.canvas.addEventListener('touchmove', onMouseOrTouchMove, false);
+	app.canvas.addEventListener('keydown', onKeyDown, false);
 	
 	//	kick off our animation loop
 	window.requestAnimationFrame(frameUpdate);
@@ -141,8 +145,8 @@ function drawScene()
 {
 	var ctx = app.ctx;
 	
-	//	clear the screen to dark
-	ctx.fillStyle = "#000020";
+	//Make the screen blue
+	ctx.fillStyle = "#0080ff";
 	ctx.fillRect(0, 0, app.width, app.height);
 	
 	ctx.save();	//	save before screen shake or any other rendering
@@ -191,8 +195,8 @@ function drawScene()
 	//	show score, depending on game state
 	if (app.state === 'play')
 	{
-		ctx.font = "italic 30px Calibri";
-		ctx.textAlign = "center";
+		ctx.font = "italic 25px Calibri";
+		ctx.textAlign = "right";
 		ctx.fillStyle = "#FFFF00";
 		
 		ctx.fillText("Score " + app.score, app.width/2, 40);
@@ -230,12 +234,12 @@ function spawnManyRocks()
 	}
 };
 
-//	spawn the main hero
-function spawnHero()
+
+function spawnHorton()
 {
 	app.hero = {
 		type : 'hero',
-		pos : {x:400, y:400},
+		pos : {x:400, y: app.height - 30},
 		angle : 0,
 		size : 60,
 		image : app.shipImage,
@@ -243,12 +247,28 @@ function spawnHero()
 	app.objects.push(app.hero);
 };
 
-//	handle mouse movement
-function myMouseMove(event)
-{
+function onKeyDown(event) {
+
+    if(app.state === 'play') {
+        switch (event.keyCode) {
+            case 37:  /* Left arrow was pressed */
+                if (app.hero.pos.x - app.keyboard_dx > 0) {
+                    app.hero.pos.x -= app.keyboard_dx;
+                }
+                break;
+            case 39:  /* Right arrow was pressed */
+                if (app.hero.pos.x + app.keyboard_dx < app.width) {
+                    app.hero.pos.x += app.keyboard_dx;
+                }
+                break;
+        }
+    }
+};
+
+
+function onMouseOrTouchMove(event) {
 	if (app.state === 'play')
 	{
 		app.hero.pos.x = event.pageX;
-		app.hero.pos.y = event.pageY;
 	}
 };

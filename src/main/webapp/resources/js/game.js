@@ -36,11 +36,31 @@ function startApp()
 	app.shipImage = new Image();
 	app.shipImage.src = "resources/images/ship.png";
 	
-	app.rockImage = new Image();
-	app.rockImage.src = "resources/images/rock.png";
-	
+	/*app.rockImage = new Image();
+	app.rockImage.src = "resources/images/rock.png";*/
+
 	app.explosionImage = new Image();
 	app.explosionImage.src = "resources/images/explosion.png";
+
+	//Bad guys
+	app.cauldronImage = new Image();
+    app.cauldronImage.src = "resources/images/cauldron.png";
+    app.kangarooImage = new Image();
+    app.kangarooImage.src = "resources/images/kangaroo.png";
+    app.trappersImage = new Image();
+    app.trappersImage.src = "resources/images/trappers.png";
+    app.wickershamImage = new Image();
+    app.wickershamImage.src = "resources/images/wickersham.png";
+
+    //Good guys
+    app.bananasImage = new Image();
+    app.bananasImage.src = "resources/images/bananas.png";
+    app.beezlenutsImage = new Image();
+    app.beezlenutsImage.src = "resources/images/beezlenuts.png";
+    app.cloverImage = new Image();
+    app.cloverImage.src = "resources/images/clover.png";
+    app.gnomesImage = new Image();
+    app.gnomesImage.src = "resources/images/gnomes.png";
 
 	app.explosionSound = new Audio();
 	app.explosionSound.src = "resources/audio/explosion.mp3";
@@ -58,7 +78,7 @@ function startApp()
 	
 	//	start up with one hero and randomly placed rocks
 	spawnHorton();
-	spawnManyRocks();
+	spawnManyItems();
 	
 	//	track mouse movement
 	app.canvas.addEventListener('mousemove', onMouseOrTouchMove, false);
@@ -118,7 +138,7 @@ function frameUpdate(timestamp)
 			{
 				//	remove and respawn at top
 				app.objects.splice(i, 1);
-				spawnRock();
+				spawnItem();
 			}
 			
 			//	collision check
@@ -133,7 +153,7 @@ function frameUpdate(timestamp)
 				if (dist < 50)
 				{
 					//console.log("HIT");
-					app.state = 'end';
+					//app.state = 'end';
 					
 					app.explosionTimer = 0.1;	//	start explosion effect timer
 					
@@ -217,8 +237,38 @@ function drawScene()
 }
 
 //	Spawn a single rock
-function spawnRock()
+function spawnItem()
 {
+
+    var itemTypeSelection = Math.random();
+    var itemImage;
+    //Bad guys
+    if(itemTypeSelection >= 0 && itemTypeSelection < 0.15) {
+        itemImage = app.kangarooImage;
+    }
+    else if(itemTypeSelection >= 0.15 && itemTypeSelection < 0.3) {
+        itemImage = app.cauldronImage;
+    }
+    else if(itemTypeSelection >= 0.3 && itemTypeSelection < 0.4) {
+        itemImage = app.wickershamImage;
+    }
+    else if(itemTypeSelection >= 0.4 && itemTypeSelection < 0.5) {
+        itemImage = app.trappersImage;
+    }
+    //Good guys
+    else if(itemTypeSelection >= 0.5 && itemTypeSelection < 0.65) {
+        itemImage = app.bananasImage;
+    }
+    else if(itemTypeSelection >= 0.65 && itemTypeSelection < 0.8) {
+        itemImage = app.beezlenutsImage;
+    }
+    else if(itemTypeSelection >= 0.8 && itemTypeSelection < 0.9) {
+        itemImage = app.cloverImage;
+    }
+    else {
+        itemImage = app.gnomesImage;
+    }
+
 	var rollRange = Math.PI * 2;
 	var rock = {
 		type : 'rock',
@@ -226,18 +276,18 @@ function spawnRock()
 		angle : Math.random() * Math.PI,
 		roll : Math.random() * rollRange - rollRange/2,
 		size : 120,
-		image : app.rockImage,
+		image : itemImage,
 		speed : 150 + 25 * app.difficulty,
 	};
 	app.objects.push(rock);
 };
 
 //	Spawn all the rocks at the start
-function spawnManyRocks()
+function spawnManyItems()
 {
 	for (var i = 0; i < 10; i++)
 	{
-		spawnRock();
+		spawnItem();
 	}
 };
 

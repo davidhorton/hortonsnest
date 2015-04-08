@@ -1,24 +1,19 @@
-//
-//	Ridiculously amazing space asteroid avoidance demo game
-//	Steve Taylor, Utah Code Camp 2015
-//	Permission is granted to reuse this code for any purpose.
-//	The images used in this game are not freely reuseable.
-//		See http://www.wahoo.com/play/html5in45/
-//
-
-//	a single nice place to store settings and vars
 var app = {
 	
 	score : 0,
 	difficulty : 0,
 	
-	state : 'play',
+	state : 'pre-play',
 	
-	explosionTimer : 0,
+	hitScreenShakeTimer : 0,
 	
-	EXPLOSION_MAX_TIME : 2,
+	SCREEN_SHAKE_MAX_TIME : 0.5,
 
-	keyboard_dx : 20
+	keyboard_dx : 20,
+
+	startButtonMaxWidth : 250,
+	startButtonHeight : 20
+
 };
 
 //	init
@@ -35,12 +30,6 @@ function startApp()
 	//	load some images we'll use later
 	app.shipImage = new Image();
 	app.shipImage.src = "resources/images/ship.png";
-	
-	/*app.rockImage = new Image();
-	app.rockImage.src = "resources/images/rock.png";*/
-
-	app.explosionImage = new Image();
-	app.explosionImage.src = "resources/images/explosion.png";
 
 	//Bad guys
 	app.cauldronImage = new Image();
@@ -62,8 +51,8 @@ function startApp()
     app.gnomesImage = new Image();
     app.gnomesImage.src = "resources/images/gnomes.png";
 
-	app.explosionSound = new Audio();
-	app.explosionSound.src = "resources/audio/explosion.mp3";
+	app.hitSound = new Audio();
+	app.hitSound.src = "resources/audio/elephantHurt.mp3";
 
     //Background music
 	app.backgroundMusic = new Audio("resources/audio/background.mp3");
@@ -79,14 +68,14 @@ function startApp()
 	//	start up with one hero and randomly placed rocks
 	spawnHorton();
 	spawnManyItems();
-	
-	//	track mouse movement
+
 	app.canvas.addEventListener('mousemove', onMouseOrTouchMove, false);
 	app.canvas.addEventListener('touchmove', onMouseOrTouchMove, false);
 	app.canvas.addEventListener('keydown', onKeyDown, false);
+	app.canvas.addEventListener('mousedown', onMouseDown, false);
 	
-	//	kick off our animation loop
-	window.requestAnimationFrame(frameUpdate);
+	drawScene();
+
 }
 
 //	update
@@ -107,13 +96,13 @@ function frameUpdate(timestamp)
 		app.score = Math.floor(app.difficulty * 10);
 	}
 	
-	//	update explosion timer, if there is one running
-	if (app.explosionTimer > 0)
+	//	update screen shake timer, if there is one running
+	if (app.hitScreenShakeTimer > 0)
 	{
-		app.explosionTimer += dt;
-		if (app.explosionTimer > app.EXPLOSION_MAX_TIME)
+		app.hitScreenShakeTimer += dt;
+		if (app.hitScreenShakeTimer > app.SCREEN_SHAKE_MAX_TIME)
 		{
-			app.explosionTimer = 0;
+			app.hitScreenShakeTimer = 0;
 		}
 	}
 	
@@ -152,12 +141,9 @@ function frameUpdate(timestamp)
 				//	but it'll need to be fine-tuned anyway for game feel
 				if (dist < 50)
 				{
-					//console.log("HIT");
-					//app.state = 'end';
+					app.hitScreenShakeTimer = 0.1;	//	start screen shake effect timer
 					
-					app.explosionTimer = 0.1;	//	start explosion effect timer
-					
-					app.explosionSound.play();
+					app.hitSound.play();
 				}
 			}
 		}
@@ -179,9 +165,9 @@ function drawScene()
 	ctx.save();	//	save before screen shake or any other rendering
 	
 	//	screen shake
-	if (app.explosionTimer > 0)
+	if (app.hitScreenShakeTimer > 0)
 	{
-		ctx.translate(Math.random() * 40 - 20, Math.random() * 40 - 20);
+		ctx.translate(Math.random() * 20 - 5, Math.random() * 20 - 5);
 	}
 	
 	//	draw objects
@@ -197,22 +183,7 @@ function drawScene()
 		ctx.save();
 			ctx.translate(o.pos.x, o.pos.y);
 			ctx.rotate(o.angle);
-			//ctx.fillStyle = "#FFFF00";
-			//ctx.fillRect(o.pos.x, o.pos.y, o.size, o.size);
 			ctx.drawImage(o.image, -o.size/2, -o.size/2, o.size, o.size);
-		ctx.restore();
-	}
-	
-	//	draw explosion if timer is running
-	if (app.explosionTimer > 0)
-	{
-		var interp = app.explosionTimer/app.EXPLOSION_MAX_TIME;
-		
-		ctx.save();
-			ctx.globalAlpha = (1 - interp);
-			ctx.translate(app.hero.pos.x, app.hero.pos.y);
-			ctx.rotate(interp * Math.PI);
-			ctx.drawImage(app.explosionImage, -app.hero.size/2, -app.hero.size/2, 100, 100);
 		ctx.restore();
 	}
 	
@@ -227,7 +198,22 @@ function drawScene()
 		ctx.fillStyle = "#FFFF00";
 		
 		ctx.fillText("Score " + app.score, app.width/2, 40);
-	} else {
+	}
+	else if(app.state === 'pre-play') {
+		ctx.font = "30px Calibri";
+		ctx.textAlign = "center";
+		ctx.fillStyle = "#FFFF00";
+		ctx.fillText("Horton is hatching an egg! Help him", app.width/2, app.height/4 + 35);
+		ctx.fillText("catch the things he needs to prepare his", app.width/2, app.height/4 + 70);
+		ctx.fillText("nest before the egg hatches in November 2015.", app.width/2, app.height/4 + 105);
+
+
+		ctx.font = app.startButtonHeight + "px Calibri";
+		ctx.textAlign = "center";
+		ctx.fillStyle = "#FFFF00";
+		ctx.fillText("Click to get down to business!", app.width/2, app.height*3/4, app.startButtonMaxWidth)
+	}
+	else {
 		ctx.font = "italic 130px Calibri";
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
@@ -277,10 +263,10 @@ function spawnItem()
 		roll : Math.random() * rollRange - rollRange/2,
 		size : 120,
 		image : itemImage,
-		speed : 150 + 25 * app.difficulty,
+		speed : 150 + 25 * app.difficulty
 	};
 	app.objects.push(rock);
-};
+}
 
 //	Spawn all the rocks at the start
 function spawnManyItems()
@@ -289,7 +275,7 @@ function spawnManyItems()
 	{
 		spawnItem();
 	}
-};
+}
 
 
 function spawnHorton()
@@ -299,10 +285,10 @@ function spawnHorton()
 		pos : {x:400, y: app.height - 30},
 		angle : 0,
 		size : 60,
-		image : app.shipImage,
+		image : app.shipImage
 	};
 	app.objects.push(app.hero);
-};
+}
 
 function onKeyDown(event) {
 
@@ -320,7 +306,7 @@ function onKeyDown(event) {
                 break;
         }
     }
-};
+}
 
 
 function onMouseOrTouchMove(event) {
@@ -328,4 +314,23 @@ function onMouseOrTouchMove(event) {
 	{
 		app.hero.pos.x = event.pageX;
 	}
-};
+}
+
+function onMouseDown(event) {
+	if (app.state === 'pre-play')
+	{
+		var leftSide = app.width/2 - app.startButtonMaxWidth/2;
+		var rightSide = app.width/2 + app.startButtonMaxWidth/2;
+		var bottomSide = app.height*3/4 - app.startButtonHeight;
+		var topSide = app.height*3/4 + app.startButtonHeight;
+
+		var x = event.pageX;
+		var y = event.pageY;
+		if (x>=leftSide && x<=rightSide && y>=bottomSide && y<=topSide) {
+			//	kick off our animation loop
+			window.requestAnimationFrame(frameUpdate);
+			app.state = 'play';
+		}
+
+	}
+}

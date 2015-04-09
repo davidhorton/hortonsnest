@@ -12,7 +12,13 @@ var app = {
 	keyboard_dx : 20,
 
 	startButtonMaxWidth : 250,
-	startButtonHeight : 20
+	startButtonHeight : 20,
+
+	pregnancyCounter : {
+		weeks:0,
+		days:0,
+		time:0
+	}
 
 };
 
@@ -27,7 +33,7 @@ function startApp()
 	app.width = app.canvas.width;
 	app.height = app.canvas.height;
 	
-	//	load some images we'll use later
+	//	Load Horton image
 	app.shipImage = new Image();
 	app.shipImage.src = "resources/images/ship.png";
 
@@ -95,7 +101,12 @@ function frameUpdate(timestamp)
 		app.difficulty += dt;
 		app.score = Math.floor(app.difficulty * 10);
 	}
-	
+
+	incrementPregnancyCounter(dt);
+	if(app.pregnancyCounter.weeks == 40) {
+		app.state = "finished."
+	}
+
 	//	update screen shake timer, if there is one running
 	if (app.hitScreenShakeTimer > 0)
 	{
@@ -198,6 +209,8 @@ function drawScene()
 		ctx.fillStyle = "#FFFF00";
 		
 		ctx.fillText("Score " + app.score, app.width/2, 40);
+
+		ctx.fillText(app.pregnancyCounter.weeks + " weeks and " + app.pregnancyCounter.days + " days", app.width*5/6, 40);
 	}
 	else if(app.state === 'pre-play') {
 		ctx.font = "30px Calibri";
@@ -288,6 +301,19 @@ function spawnHorton()
 		image : app.shipImage
 	};
 	app.objects.push(app.hero);
+}
+
+function incrementPregnancyCounter(dt) {
+	app.pregnancyCounter.time += dt;
+	if(app.pregnancyCounter.time > 0.6) {
+		app.pregnancyCounter.time = 0;
+		app.pregnancyCounter.days++;
+	}
+
+	if(app.pregnancyCounter.days == 7) {
+		app.pregnancyCounter.weeks++;
+		app.pregnancyCounter.days = 0;
+	}
 }
 
 function onKeyDown(event) {

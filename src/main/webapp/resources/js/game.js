@@ -217,7 +217,9 @@ function drawScene()
 		
 		ctx.fillText("Score " + app.score, app.width/2, 40);
 
-		ctx.fillText(app.pregnancyCounter.weeks + " weeks and " + app.pregnancyCounter.days + " days", app.width*5/6, 40);
+
+		ctx.fillText(app.pregnancyCounter.weeks + " " + (app.pregnancyCounter.weeks == 1 ? "week" : "weeks")
+			+ " and " + app.pregnancyCounter.days + " " + (app.pregnancyCounter.days == 1 ? "day" : "days"), app.width - 15, 40);
 	}
 	else if(app.state === 'pre-play') {
 		ctx.font = "30px Calibri";

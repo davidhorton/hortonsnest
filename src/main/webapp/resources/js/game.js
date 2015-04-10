@@ -18,7 +18,9 @@ var app = {
 		weeks:0,
 		days:0,
 		time:0
-	}
+	},
+
+	inFinalStretch : false
 
 };
 
@@ -98,11 +100,16 @@ function frameUpdate(timestamp)
 	//	difficulty and score
 	if (app.state === 'play')
 	{
-		app.difficulty += dt;
-		app.score = Math.floor(app.difficulty * 10);
+		app.difficulty += dt/8;
+		app.score = Math.floor(app.difficulty * 50);
 	}
 
 	incrementPregnancyCounter(dt);
+	//Bump up (no pun intended!) the difficulty for the final stretch
+	if(app.pregnancyCounter.weeks >= 36 && !app.inFinalStretch) {
+		app.difficulty += dt*1000;
+		app.inFinalStretch = true;
+	}
 	if(app.pregnancyCounter.weeks == 40) {
 		app.state = "finished."
 	}

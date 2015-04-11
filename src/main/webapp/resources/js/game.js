@@ -11,6 +11,9 @@ var app = {
 	collisionMessageTimer : 0,
 	COLLISION_MESSAGE_MAX_TIME : 1.5,
 
+	GOOD_ITEM_LIKELIHOOD : 0.6,
+	WEEKLY_BAD_INCREASE : 0.01,
+
 	keyboard_dx : 20,
 
 	startButtonMaxWidth : 250,
@@ -355,48 +358,50 @@ function drawScene()
 function spawnItem()
 {
 
-    var itemTypeSelection = Math.random();
-    //var itemImage;
-	//var type;
-	//var points;
-	//var goodGuy;
+	var goodGuySelection = Math.random();
+	var goodGuy = goodGuySelection <= app.GOOD_ITEM_LIKELIHOOD;
 
+    var itemTypeSelection = Math.random();
 	var fallingItem;
     //Good guys
-    if(itemTypeSelection >= 0 && itemTypeSelection < 0.1) {
-        fallingItem = app.items.bananas;
-    }
-    else if(itemTypeSelection >= 0.1 && itemTypeSelection < 0.2) {
-		fallingItem = app.items.bottle;
-    }
-    else if(itemTypeSelection >= 0.2 && itemTypeSelection < 0.3) {
-		fallingItem = app.items.ducky;
-    }
-	else if(itemTypeSelection >= 0.3 && itemTypeSelection < 0.4) {
-		fallingItem = app.items.gnome;
+    if(goodGuy) {
+		if (itemTypeSelection >= 0 && itemTypeSelection < 0.18) {
+			fallingItem = app.items.bananas;
+		}
+		else if (itemTypeSelection >= 0.18 && itemTypeSelection < 0.36) {
+			fallingItem = app.items.bottle;
+		}
+		else if (itemTypeSelection >= 0.36 && itemTypeSelection < 0.54) {
+			fallingItem = app.items.ducky;
+		}
+		else if (itemTypeSelection >= 0.54 && itemTypeSelection < 0.72) {
+			fallingItem = app.items.strawberry;
+		}
+		else if (itemTypeSelection >= 0.72 && itemTypeSelection < 0.9) {
+			fallingItem = app.items.teddy;
+		}
+		else {
+			fallingItem = app.items.gnome;
+		}
 	}
-    else if(itemTypeSelection >= 0.4 && itemTypeSelection < 0.5) {
-		fallingItem = app.items.strawberry;
-    }
-	else if(itemTypeSelection >= 0.5 && itemTypeSelection < 0.6) {
-		fallingItem = app.items.teddy;
+	else {
+		//Bad guys
+		if (itemTypeSelection >= 0 && itemTypeSelection < 0.2) {
+			fallingItem = app.items.kangaroo;
+		}
+		else if (itemTypeSelection >= 0.2 && itemTypeSelection < 0.4) {
+			fallingItem = app.items.leopard;
+		}
+		else if (itemTypeSelection >= 0.4 && itemTypeSelection < 0.6) {
+			fallingItem = app.items.monkey;
+		}
+		else if (itemTypeSelection >= 0.6 && itemTypeSelection < 0.8) {
+			fallingItem = app.items.ostrich;
+		}
+		else {
+			fallingItem = app.items.snake;
+		}
 	}
-    //Bad guys
-    else if(itemTypeSelection >= 0.6 && itemTypeSelection < 0.68) {
-		fallingItem = app.items.kangaroo;
-    }
-    else if(itemTypeSelection >= 0.68 && itemTypeSelection < 0.76) {
-		fallingItem = app.items.leopard;
-    }
-    else if(itemTypeSelection >= 0.76 && itemTypeSelection < 0.84) {
-		fallingItem = app.items.monkey;
-    }
-	else if(itemTypeSelection >= 0.84 && itemTypeSelection < 0.92) {
-		fallingItem = app.items.ostrich;
-	}
-    else {
-		fallingItem = app.items.snake;
-    }
 
 	var rollRange = Math.PI * 2;
 	var item = {
@@ -444,6 +449,10 @@ function incrementPregnancyCounter(dt) {
 	}
 
 	if(app.pregnancyCounter.days == 7) {
+
+		//Each week, make it so slightly more bad things than good things happen
+		app.GOOD_ITEM_LIKELIHOOD -= app.WEEKLY_BAD_INCREASE;
+
 		app.pregnancyCounter.weeks++;
 		app.pregnancyCounter.days = 0;
 	}

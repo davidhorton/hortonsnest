@@ -9,7 +9,7 @@ var app = {
 	SCREEN_SHAKE_MAX_TIME : 0.5,
 
 	collisionMessageTimer : 0,
-	COLLISION_MESSAGE_MAX_TIME : 2,
+	COLLISION_MESSAGE_MAX_TIME : 1.5,
 
 	keyboard_dx : 20,
 
@@ -36,30 +36,11 @@ function startApp()
 	//	convenient copies of canvas width and height for drawing purposes later
 	app.width = app.canvas.width;
 	app.height = app.canvas.height;
-	
-	//	Load Horton image
-	app.shipImage = new Image();
-	app.shipImage.src = "resources/images/ship.png";
 
-	//Bad guys
-	app.cauldronImage = new Image();
-    app.cauldronImage.src = "resources/images/cauldron.png";
-    app.kangarooImage = new Image();
-    app.kangarooImage.src = "resources/images/kangaroo.png";
-    app.trappersImage = new Image();
-    app.trappersImage.src = "resources/images/trappers.png";
-    app.wickershamImage = new Image();
-    app.wickershamImage.src = "resources/images/wickersham.png";
+	app.hortonImage = createImage("horton.png");
+	app.backGroundImage = createImage("background.png");
 
-    //Good guys
-    app.bananasImage = new Image();
-    app.bananasImage.src = "resources/images/bananas.png";
-    app.beezlenutsImage = new Image();
-    app.beezlenutsImage.src = "resources/images/beezlenuts.png";
-    app.cloverImage = new Image();
-    app.cloverImage.src = "resources/images/clover.png";
-    app.gnomesImage = new Image();
-    app.gnomesImage.src = "resources/images/gnomes.png";
+	createItems();
 
 	app.hitSound = new Audio();
 	app.hitSound.src = "resources/audio/elephantHurt.mp3";
@@ -85,6 +66,94 @@ function startApp()
 	
 	drawScene();
 
+}
+
+function createItems() {
+	app.items = {
+		bottle : {
+			type : "bottle",
+			image : createImage("bottle.png"),
+			points : 50,
+			messageText : "Baby Bottle",
+			goodGuy : true
+		},
+		bananas : {
+			type : "bananas",
+			image : createImage("bananas.png"),
+			points : 50,
+			messageText : "Bananas",
+			goodGuy : true
+		},
+		gnome : {
+			type : "gnome",
+			image : createImage("gnome.png"),
+			points : 50,
+			messageText : "Garden Gnome",
+			goodGuy : true
+		},
+		ducky : {
+			type : "ducky",
+			image : createImage("ducky.png"),
+			points : 50,
+			messageText : "Rubber Ducky",
+			goodGuy : true
+		},
+		strawberry : {
+			type : "strawberry",
+			image : createImage("strawberry.png"),
+			points : 50,
+			messageText : "Strawberry",
+			goodGuy : true
+		},
+		teddy : {
+			type : "teddy",
+			image : createImage("teddy.png"),
+			points : 50,
+			messageText : "Teddy Bear",
+			goodGuy : true
+		},
+		kangaroo : {
+			type : "kangaroo",
+			image : createImage("kangaroo.png"),
+			points : -50,
+			messageText : "Nasty Kangaroo",
+			goodGuy : false
+		},
+		leopard : {
+			type : "leopard",
+			image : createImage("leopard.png"),
+			points : -50,
+			messageText : "Leopard",
+			goodGuy : false
+		},
+		ostrich : {
+			type : "ostrich",
+			image : createImage("ostrich.png"),
+			points : -50,
+			messageText : "Evil Ostrich",
+			goodGuy : false
+		},
+		snake : {
+			type : "snake",
+			image : createImage("snake.png"),
+			points : -50,
+			messageText : "Snake",
+			goodGuy : false
+		},
+		monkey : {
+			type : "monkey",
+			image : createImage("monkey.png"),
+			points : -50,
+			messageText : "Evil Monkey",
+			goodGuy : false
+		}
+	}
+}
+
+function createImage(filename) {
+	var image = new Image();
+	image.src = "resources/images/" + filename;
+	return image;
 }
 
 //	update
@@ -176,7 +245,7 @@ function frameUpdate(timestamp)
 
 					app.collisionMessageTimer = 0.1;
 					app.collisionMessage = {
-						message : o.type + "  " + o.points,
+						message : o.msg + "  " + (o.goodGuy ? "+" : "") + o.points,
 						good : o.goodGuy
 					};
 
@@ -205,6 +274,7 @@ function drawScene()
 	ctx.fillRect(0, 0, app.width, app.height);
 	
 	ctx.save();	//	save before screen shake or any other rendering
+	ctx.drawImage(app.backGroundImage, 0, 0, app.width, app.height);
 	
 	//	screen shake
 	if (app.hitScreenShakeTimer > 0)
@@ -286,72 +356,60 @@ function spawnItem()
 {
 
     var itemTypeSelection = Math.random();
-    var itemImage;
-	var type;
-	var points;
-	var goodGuy;
-    //Bad guys
-    if(itemTypeSelection >= 0 && itemTypeSelection < 0.15) {
-        itemImage = app.kangarooImage;
-		type = "Kangaroo";
-		points = -25;
-		goodGuy = false;
-    }
-    else if(itemTypeSelection >= 0.15 && itemTypeSelection < 0.3) {
-        itemImage = app.cauldronImage;
-		type = "Cauldron";
-		points = -50;
-		goodGuy = false;
-    }
-    else if(itemTypeSelection >= 0.3 && itemTypeSelection < 0.4) {
-        itemImage = app.wickershamImage;
-		type = "Wickersham";
-		points = -75;
-		goodGuy = false;
-    }
-    else if(itemTypeSelection >= 0.4 && itemTypeSelection < 0.5) {
-        itemImage = app.trappersImage;
-		type = "Trappers";
-		points = -100;
-		goodGuy = false;
-    }
+    //var itemImage;
+	//var type;
+	//var points;
+	//var goodGuy;
+
+	var fallingItem;
     //Good guys
-    else if(itemTypeSelection >= 0.5 && itemTypeSelection < 0.65) {
-        itemImage = app.bananasImage;
-		type = "Banana";
-		points = 25;
-		goodGuy = true;
+    if(itemTypeSelection >= 0 && itemTypeSelection < 0.1) {
+        fallingItem = app.items.bananas;
     }
-    else if(itemTypeSelection >= 0.65 && itemTypeSelection < 0.8) {
-        itemImage = app.beezlenutsImage;
-		type = "Beezlenuts";
-		points = 50;
-		goodGuy = true;
+    else if(itemTypeSelection >= 0.1 && itemTypeSelection < 0.2) {
+		fallingItem = app.items.bottle;
     }
-    else if(itemTypeSelection >= 0.8 && itemTypeSelection < 0.9) {
-        itemImage = app.cloverImage;
-		type = "Clover";
-		points = 75;
-		goodGuy = true;
+    else if(itemTypeSelection >= 0.2 && itemTypeSelection < 0.3) {
+		fallingItem = app.items.ducky;
     }
+	else if(itemTypeSelection >= 0.3 && itemTypeSelection < 0.4) {
+		fallingItem = app.items.gnome;
+	}
+    else if(itemTypeSelection >= 0.4 && itemTypeSelection < 0.5) {
+		fallingItem = app.items.strawberry;
+    }
+	else if(itemTypeSelection >= 0.5 && itemTypeSelection < 0.6) {
+		fallingItem = app.items.teddy;
+	}
+    //Bad guys
+    else if(itemTypeSelection >= 0.6 && itemTypeSelection < 0.68) {
+		fallingItem = app.items.kangaroo;
+    }
+    else if(itemTypeSelection >= 0.68 && itemTypeSelection < 0.76) {
+		fallingItem = app.items.leopard;
+    }
+    else if(itemTypeSelection >= 0.76 && itemTypeSelection < 0.84) {
+		fallingItem = app.items.monkey;
+    }
+	else if(itemTypeSelection >= 0.84 && itemTypeSelection < 0.92) {
+		fallingItem = app.items.ostrich;
+	}
     else {
-        itemImage = app.gnomesImage;
-		type = "Gnomes";
-		points = 100;
-		goodGuy = true;
+		fallingItem = app.items.snake;
     }
 
 	var rollRange = Math.PI * 2;
 	var item = {
-		type : type,
+		type : fallingItem.type,
 		pos : {x:Math.random() * app.width, y:Math.random() * -app.height},
 		angle : Math.random() * Math.PI,
 		roll : Math.random() * rollRange - rollRange/2,
 		size : 120,
-		image : itemImage,
+		image : fallingItem.image,
 		speed : 150 + 25 * app.difficulty,
-		points : points,
-		goodGuy : goodGuy
+		points : fallingItem.points,
+		goodGuy : fallingItem.goodGuy,
+		msg : fallingItem.messageText
 	};
 	app.objects.push(item);
 }
@@ -373,7 +431,7 @@ function spawnHorton()
 		pos : {x:400, y: app.height - 30},
 		angle : 0,
 		size : 60,
-		image : app.shipImage
+		image : app.hortonImage
 	};
 	app.objects.push(app.horton);
 }

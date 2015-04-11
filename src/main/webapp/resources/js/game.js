@@ -6,8 +6,10 @@ var app = {
 	state : 'pre-play',
 	
 	hitScreenShakeTimer : 0,
-	
 	SCREEN_SHAKE_MAX_TIME : 0.5,
+
+	collisionMessageTimer : 0,
+	COLLISION_MESSAGE_MAX_TIME : 2,
 
 	keyboard_dx : 20,
 
@@ -72,8 +74,7 @@ function startApp()
 	
 	//	our master list of objects
 	app.objects = [];
-	
-	//	start up with one hero and randomly placed rocks
+
 	spawnHorton();
 	spawnManyItems();
 
@@ -101,7 +102,7 @@ function frameUpdate(timestamp)
 	if (app.state === 'play')
 	{
 		app.difficulty += dt/8;
-		app.score = Math.floor(app.difficulty * 50);
+		app.score += Math.floor(dt * 80);
 	}
 
 	incrementPregnancyCounter(dt);
@@ -123,6 +124,16 @@ function frameUpdate(timestamp)
 			app.hitScreenShakeTimer = 0;
 		}
 	}
+
+	//	update collision message timer, if there is one running
+	if (app.collisionMessageTimer > 0)
+	{
+		app.collisionMessageTimer += dt;
+		if (app.collisionMessageTimer > app.COLLISION_MESSAGE_MAX_TIME)
+		{
+			app.collisionMessageTimer = 0;
+		}
+	}
 	
 	//	object updating (movement, rotation, etc.)
 	for (var i = app.objects.length - 1; i >= 0; i--)
@@ -134,11 +145,11 @@ function frameUpdate(timestamp)
 			o.angle += o.roll * dt;
 		}
 		
-		if (o.type === 'rock')
+		if (o.type !== 'horton')
 		{
 			if (o.speed)
 			{
-				o.pos.y += o.speed * dt;	//	move rock down the screen
+				o.pos.y += o.speed * dt;	//	move item down the screen
 			}
 			
 			if (o.pos.y - o.size > app.height)	//	off bottom?
@@ -151,17 +162,30 @@ function frameUpdate(timestamp)
 			//	collision check
 			if (app.state === 'play')
 			{
-				var dx = app.hero.pos.x - o.pos.x;
-				var dy = app.hero.pos.y - o.pos.y;
+				var dx = app.horton.pos.x - o.pos.x;
+				var dy = app.horton.pos.y - o.pos.y;
 				var dist = Math.sqrt(dx*dx + dy*dy);	//	distance formula
 				
 				//	this should be some other non-hardcoded distance check value,
 				//	but it'll need to be fine-tuned anyway for game feel
 				if (dist < 50)
 				{
-					app.hitScreenShakeTimer = 0.1;	//	start screen shake effect timer
-					
-					app.hitSound.play();
+					//	remove and respawn at top
+					app.objects.splice(i, 1);
+					spawnItem();
+
+					app.collisionMessageTimer = 0.1;
+					app.collisionMessage = {
+						message : o.type + "  " + o.points,
+						good : o.goodGuy
+					};
+
+					app.score += o.points;
+
+					if(!o.goodGuy) {
+						app.hitSound.play();
+						app.hitScreenShakeTimer = 0.1;	//	start screen shake effect timer
+					}
 				}
 			}
 		}
@@ -187,14 +211,27 @@ function drawScene()
 	{
 		ctx.translate(Math.random() * 20 - 5, Math.random() * 20 - 5);
 	}
+
+	if (app.collisionMessageTimer > 0) {
+		ctx.font = "italic 20px Calibri";
+		ctx.textAlign = "center";
+		if(app.collisionMessage.good) {
+			ctx.fillStyle = "#32cd32";
+		}
+		else {
+			ctx.fillStyle = "#ff0000";
+		}
+
+		ctx.fillText(app.collisionMessage.message, app.width/2, 70);
+	}
 	
 	//	draw objects
 	for (var i = 0; i < app.objects.length; i++)
 	{
 		var o = app.objects[i];
 		
-		//	don't draw hero outside of normal play state
-		if (o.type === 'hero' && app.state !== 'play')
+		//	don't draw horton outside of normal play state
+		if (o.type === 'horton' && app.state !== 'play')
 			continue;
 		
 		//	draw object image, centered/rotated around its pos
@@ -212,12 +249,12 @@ function drawScene()
 	if (app.state === 'play')
 	{
 		ctx.font = "italic 25px Calibri";
-		ctx.textAlign = "right";
+		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
 		
 		ctx.fillText("Score " + app.score, app.width/2, 40);
 
-
+		ctx.textAlign = "right";
 		ctx.fillText(app.pregnancyCounter.weeks + " " + (app.pregnancyCounter.weeks == 1 ? "week" : "weeks")
 			+ " and " + app.pregnancyCounter.days + " " + (app.pregnancyCounter.days == 1 ? "day" : "days"), app.width - 15, 40);
 	}
@@ -225,9 +262,9 @@ function drawScene()
 		ctx.font = "30px Calibri";
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
-		ctx.fillText("Horton is hatching an egg! Help him", app.width/2, app.height/4 + 35);
-		ctx.fillText("catch the things he needs to prepare his", app.width/2, app.height/4 + 70);
-		ctx.fillText("nest before the egg hatches in November 2015.", app.width/2, app.height/4 + 105);
+		ctx.fillText("Horton is hatching an egg! Help him", app.width/2, app.height/5 + 35);
+		ctx.fillText("catch the things he needs to prepare his", app.width/2, app.height/5 + 70);
+		ctx.fillText("nest before the egg hatches in November 2015.", app.width/2, app.height/5 + 105);
 
 
 		ctx.font = app.startButtonHeight + "px Calibri";
@@ -244,53 +281,82 @@ function drawScene()
 	}
 }
 
-//	Spawn a single rock
+
 function spawnItem()
 {
 
     var itemTypeSelection = Math.random();
     var itemImage;
+	var type;
+	var points;
+	var goodGuy;
     //Bad guys
     if(itemTypeSelection >= 0 && itemTypeSelection < 0.15) {
         itemImage = app.kangarooImage;
+		type = "Kangaroo";
+		points = -25;
+		goodGuy = false;
     }
     else if(itemTypeSelection >= 0.15 && itemTypeSelection < 0.3) {
         itemImage = app.cauldronImage;
+		type = "Cauldron";
+		points = -50;
+		goodGuy = false;
     }
     else if(itemTypeSelection >= 0.3 && itemTypeSelection < 0.4) {
         itemImage = app.wickershamImage;
+		type = "Wickersham";
+		points = -75;
+		goodGuy = false;
     }
     else if(itemTypeSelection >= 0.4 && itemTypeSelection < 0.5) {
         itemImage = app.trappersImage;
+		type = "Trappers";
+		points = -100;
+		goodGuy = false;
     }
     //Good guys
     else if(itemTypeSelection >= 0.5 && itemTypeSelection < 0.65) {
         itemImage = app.bananasImage;
+		type = "Banana";
+		points = 25;
+		goodGuy = true;
     }
     else if(itemTypeSelection >= 0.65 && itemTypeSelection < 0.8) {
         itemImage = app.beezlenutsImage;
+		type = "Beezlenuts";
+		points = 50;
+		goodGuy = true;
     }
     else if(itemTypeSelection >= 0.8 && itemTypeSelection < 0.9) {
         itemImage = app.cloverImage;
+		type = "Clover";
+		points = 75;
+		goodGuy = true;
     }
     else {
         itemImage = app.gnomesImage;
+		type = "Gnomes";
+		points = 100;
+		goodGuy = true;
     }
 
 	var rollRange = Math.PI * 2;
-	var rock = {
-		type : 'rock',
+	var item = {
+		type : type,
 		pos : {x:Math.random() * app.width, y:Math.random() * -app.height},
 		angle : Math.random() * Math.PI,
 		roll : Math.random() * rollRange - rollRange/2,
 		size : 120,
 		image : itemImage,
-		speed : 150 + 25 * app.difficulty
+		speed : 150 + 25 * app.difficulty,
+		points : points,
+		goodGuy : goodGuy
 	};
-	app.objects.push(rock);
+	app.objects.push(item);
 }
 
-//	Spawn all the rocks at the start
+//	Spawn all the falling items at the start
 function spawnManyItems()
 {
 	for (var i = 0; i < 10; i++)
@@ -302,14 +368,14 @@ function spawnManyItems()
 
 function spawnHorton()
 {
-	app.hero = {
-		type : 'hero',
+	app.horton = {
+		type : 'horton',
 		pos : {x:400, y: app.height - 30},
 		angle : 0,
 		size : 60,
 		image : app.shipImage
 	};
-	app.objects.push(app.hero);
+	app.objects.push(app.horton);
 }
 
 function incrementPregnancyCounter(dt) {
@@ -330,13 +396,13 @@ function onKeyDown(event) {
     if(app.state === 'play') {
         switch (event.keyCode) {
             case 37:  /* Left arrow was pressed */
-                if (app.hero.pos.x - app.keyboard_dx > 0) {
-                    app.hero.pos.x -= app.keyboard_dx;
+                if (app.horton.pos.x - app.keyboard_dx > 0) {
+                    app.horton.pos.x -= app.keyboard_dx;
                 }
                 break;
             case 39:  /* Right arrow was pressed */
-                if (app.hero.pos.x + app.keyboard_dx < app.width) {
-                    app.hero.pos.x += app.keyboard_dx;
+                if (app.horton.pos.x + app.keyboard_dx < app.width) {
+                    app.horton.pos.x += app.keyboard_dx;
                 }
                 break;
         }
@@ -347,7 +413,7 @@ function onKeyDown(event) {
 function onMouseOrTouchMove(event) {
 	if (app.state === 'play')
 	{
-		app.hero.pos.x = event.pageX;
+		app.horton.pos.x = event.pageX;
 	}
 }
 

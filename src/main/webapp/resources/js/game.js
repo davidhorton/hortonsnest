@@ -240,7 +240,7 @@ function frameUpdate(timestamp)
 				
 				//	this should be some other non-hardcoded distance check value,
 				//	but it'll need to be fine-tuned anyway for game feel
-				if (dist < 50)
+				if (dist < (app.horton.size *.6))
 				{
 					//	remove and respawn at top
 					app.objects.splice(i, 1);
@@ -409,7 +409,7 @@ function spawnItem()
 		pos : {x:Math.random() * app.width, y:Math.random() * -app.height},
 		angle : Math.random() * Math.PI,
 		roll : Math.random() * rollRange - rollRange/2,
-		size : 120,
+		size : 80,
 		image : fallingItem.image,
 		speed : 150 + 25 * app.difficulty,
 		points : fallingItem.points,
@@ -433,9 +433,9 @@ function spawnHorton()
 {
 	app.horton = {
 		type : 'horton',
-		pos : {x:400, y: app.height - 30},
+		pos : {x:400, y: app.height - 60},
 		angle : 0,
-		size : 60,
+		size : 120,
 		image : app.hortonImage
 	};
 	app.objects.push(app.horton);

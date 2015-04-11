@@ -60,7 +60,7 @@ function startApp()
 	app.objects = [];
 
 	spawnHorton();
-	spawnManyItems();
+	spawnItems(10);
 
 	app.canvas.addEventListener('mousemove', onMouseOrTouchMove, false);
 	app.canvas.addEventListener('touchmove', onMouseOrTouchMove, false);
@@ -419,10 +419,10 @@ function spawnItem()
 	app.objects.push(item);
 }
 
-//	Spawn all the falling items at the start
-function spawnManyItems()
+
+function spawnItems(numberOfItems)
 {
-	for (var i = 0; i < 10; i++)
+	for (var i = 0; i < numberOfItems; i++)
 	{
 		spawnItem();
 	}
@@ -455,6 +455,10 @@ function incrementPregnancyCounter(dt) {
 
 		app.pregnancyCounter.weeks++;
 		app.pregnancyCounter.days = 0;
+
+		if(app.pregnancyCounter.weeks % 5 == 0) {
+			spawnItem();
+		}
 	}
 }
 

@@ -88,7 +88,7 @@ function createItems() {
 		bottle : {
 			type : "bottle",
 			image : createImage("bottle.png"),
-			points : 50,
+			points : 100,
 			messageText : "Baby Bottle",
 			goodGuy : true,
 			xSize : 50
@@ -96,7 +96,7 @@ function createItems() {
 		bananas : {
 			type : "bananas",
 			image : createImage("bananas.png"),
-			points : 100,
+			points : 200,
 			messageText : "Bananas",
 			goodGuy : true
 		},
@@ -118,7 +118,7 @@ function createItems() {
 		strawberry : {
 			type : "strawberry",
 			image : createImage("strawberry.png"),
-			points : 25,
+			points : 50,
 			messageText : "Strawberry",
 			goodGuy : true
 		},
@@ -133,14 +133,14 @@ function createItems() {
 			type : "kangaroo",
 			image : createImage("kangaroo.png"),
 			points : -150,
-			messageText : "Nasty Kangaroo",
+			messageText : "Killer Kangaroo",
 			goodGuy : false
 		},
 		leopard : {
 			type : "leopard",
 			image : createImage("leopard.png"),
 			points : -300,
-			messageText : "Leopard",
+			messageText : "Nasty Leopard",
 			goodGuy : false,
 			xSize : 70
 		},
@@ -155,7 +155,7 @@ function createItems() {
 			type : "snake",
 			image : createImage("snake.png"),
 			points : -50,
-			messageText : "Snake",
+			messageText : "Sneaky Snake",
 			goodGuy : false
 		},
 		monkey : {
@@ -188,9 +188,8 @@ function frameUpdate(timestamp)
 	//	play sequence
 	if (app.state === 'play') {
 
-		//difficulty and score
+		//difficulty
 		app.difficulty += dt / 8;
-		app.score += Math.floor(dt * 80);
 
 		incrementPregnancyCounter(dt);
 		//Bump up (no pun intended!) the difficulty for the final stretch

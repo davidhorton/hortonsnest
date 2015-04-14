@@ -84,56 +84,56 @@ function createItems() {
 		bananas : {
 			type : "bananas",
 			image : createImage("bananas.png"),
-			points : 50,
+			points : 100,
 			messageText : "Bananas",
 			goodGuy : true
 		},
 		gnome : {
 			type : "gnome",
 			image : createImage("gnome.png"),
-			points : 50,
+			points : 500,
 			messageText : "Garden Gnome",
 			goodGuy : true
 		},
 		ducky : {
 			type : "ducky",
 			image : createImage("ducky.png"),
-			points : 50,
+			points : 75,
 			messageText : "Rubber Ducky",
 			goodGuy : true
 		},
 		strawberry : {
 			type : "strawberry",
 			image : createImage("strawberry.png"),
-			points : 50,
+			points : 25,
 			messageText : "Strawberry",
 			goodGuy : true
 		},
 		teddy : {
 			type : "teddy",
 			image : createImage("teddy.png"),
-			points : 50,
+			points : 300,
 			messageText : "Teddy Bear",
 			goodGuy : true
 		},
 		kangaroo : {
 			type : "kangaroo",
 			image : createImage("kangaroo.png"),
-			points : -50,
+			points : -150,
 			messageText : "Nasty Kangaroo",
 			goodGuy : false
 		},
 		leopard : {
 			type : "leopard",
 			image : createImage("leopard.png"),
-			points : -50,
+			points : -300,
 			messageText : "Leopard",
 			goodGuy : false
 		},
 		ostrich : {
 			type : "ostrich",
 			image : createImage("ostrich.png"),
-			points : -50,
+			points : -25,
 			messageText : "Evil Ostrich",
 			goodGuy : false
 		},
@@ -147,7 +147,7 @@ function createItems() {
 		monkey : {
 			type : "monkey",
 			image : createImage("monkey.png"),
-			points : -50,
+			points : -500,
 			messageText : "Evil Monkey",
 			goodGuy : false
 		}

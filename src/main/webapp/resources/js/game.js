@@ -1,10 +1,10 @@
 var app = {
-	
+
 	score : 0,
 	difficulty : 0,
-	
+
 	state : 'pre-play',
-	
+
 	hitScreenShakeTimer : 0,
 	SCREEN_SHAKE_MAX_TIME : 0.5,
 
@@ -43,7 +43,7 @@ function startApp()
 	//	set up our references to canvas and drawing context
 	app.canvas = document.getElementById('canvas');
 	app.ctx = app.canvas.getContext('2d');
-	
+
 	//	convenient copies of canvas width and height for drawing purposes later
 	app.width = app.canvas.width;
 	app.height = app.canvas.height;
@@ -60,14 +60,14 @@ function startApp()
 	app.hitSound = new Audio();
 	app.hitSound.src = "resources/audio/elephantHurt.mp3";
 
-    //Background music
+	//Background music
 	app.backgroundMusic = new Audio("resources/audio/background.mp3");
-    app.backgroundMusic.addEventListener('ended', function() {
-        this.currentTime = 0;
-        this.play();
-    }, false);
-    app.backgroundMusic.play();
-	
+	app.backgroundMusic.addEventListener('ended', function() {
+		this.currentTime = 0;
+		this.play();
+	}, false);
+	app.backgroundMusic.play();
+
 	//	our master list of objects
 	app.objects = [];
 
@@ -111,14 +111,14 @@ function createItems() {
 		ducky : {
 			type : "ducky",
 			image : createImage("ducky.png"),
-			points : 75,
+			points : 175,
 			messageText : "Rubber Ducky",
 			goodGuy : true
 		},
 		strawberry : {
 			type : "strawberry",
 			image : createImage("strawberry.png"),
-			points : 50,
+			points : 150,
 			messageText : "Strawberry",
 			goodGuy : true
 		},
@@ -139,16 +139,16 @@ function createItems() {
 		leopard : {
 			type : "leopard",
 			image : createImage("leopard.png"),
-			points : -300,
+			points : -250,
 			messageText : "Nasty Leopard",
 			goodGuy : false,
 			xSize : 70
 		},
-		ostrich : {
-			type : "ostrich",
-			image : createImage("ostrich.png"),
-			points : -25,
-			messageText : "Evil Ostrich",
+		spider : {
+			type : "spider",
+			image : createImage("spider.png"),
+			points : -500,
+			messageText : "Spawn of Satan",
 			goodGuy : false
 		},
 		snake : {
@@ -161,7 +161,7 @@ function createItems() {
 		monkey : {
 			type : "monkey",
 			image : createImage("monkey.png"),
-			points : -500,
+			points : -300,
 			messageText : "Evil Monkey",
 			goodGuy : false
 		}
@@ -178,13 +178,13 @@ function createImage(filename) {
 function frameUpdate(timestamp)
 {
 	window.requestAnimationFrame(frameUpdate);	//	trigger next update in the chain
-	
+
 	//	delta time calculation
 	if (!app.lastTime)
 		app.lastTime = timestamp;
 	var dt = (timestamp - app.lastTime)/1000;
 	app.lastTime = timestamp;
-	
+
 	//	play sequence
 	if (app.state === 'play') {
 
@@ -267,7 +267,7 @@ function frameUpdate(timestamp)
 			}
 		}
 	}
-	
+
 	//	re-draw everything once per update
 	drawScene();
 }
@@ -276,11 +276,11 @@ function frameUpdate(timestamp)
 function drawScene()
 {
 	var ctx = app.ctx;
-	
+
 	//Make the screen blue
 	ctx.fillStyle = "#0080ff";
-	ctx.fillRect(0, 0, app.width, app.height);
-	
+	ctx.fillRect(-5, -5, app.width+5, app.height+5);
+
 	ctx.save();	//	save before screen shake or any other rendering
 
 	//Draw background
@@ -295,7 +295,7 @@ function drawScene()
 		speakerImage = app.speakerOff;
 	}
 	ctx.drawImage(speakerImage, app.speakerSettings.xPos, app.speakerSettings.yPos, app.speakerSettings.xSize, app.speakerSettings.ySize);
-	
+
 	//	screen shake
 	if (app.hitScreenShakeTimer > 0)
 	{
@@ -322,52 +322,52 @@ function drawScene()
 
 		ctx.fillText(app.collisionMessage.message, app.width/2, 65);
 	}
-	
+
 	//	draw objects
 	for (var i = 0; i < app.objects.length; i++)
 	{
 		var o = app.objects[i];
-		
+
 		//	don't draw horton outside of normal play state
 		if (o.type === 'horton' && app.state !== 'play')
 			continue;
-		
+
 		//	draw object image, centered/rotated around its pos
 		ctx.save();
-			ctx.translate(o.pos.x, o.pos.y);
-			ctx.rotate(o.angle);
-			ctx.drawImage(o.image, -o.xSize/2, -o.ySize/2, o.xSize, o.ySize);
+		ctx.translate(o.pos.x, o.pos.y);
+		ctx.rotate(o.angle);
+		ctx.drawImage(o.image, -o.xSize/2, -o.ySize/2, o.xSize, o.ySize);
 		ctx.restore();
 	}
-	
+
 	//	done with all game world drawing - restore old ctx state
 	ctx.restore();
-	
+
 	//	show score, depending on game state
 	if (app.state === 'play')
 	{
 		ctx.font = "italic 25px Courier";
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
-		
+
 		ctx.fillText("Score " + app.score, app.width/2, 40);
 
 		ctx.fillStyle = "#000080";
 		ctx.textAlign = "right";
 		ctx.fillText(app.pregnancyCounter.weeks + " " + (app.pregnancyCounter.weeks == 1 ? "week" : "weeks")
-			+ " and " + app.pregnancyCounter.days + " " + (app.pregnancyCounter.days == 1 ? "day" : "days"), app.width - 15, 40);
+		+ " and " + app.pregnancyCounter.days + " " + (app.pregnancyCounter.days == 1 ? "day" : "days"), app.width - 15, 40);
 	}
 	else if(app.state === 'pre-play') {
 		//Draw a big happy elephant
 		ctx.save();
-			ctx.translate(app.width/7, app.height - 120);
-			ctx.drawImage(app.horton.image, -120, -120, 240, 240);
+		ctx.translate(app.width/7, app.height - 120);
+		ctx.drawImage(app.horton.image, -120, -120, 240, 240);
 		ctx.restore();
 
 		//Draw a thought bubble
 		ctx.save();
-			ctx.translate(app.width *.53, app.height *.3);
-			ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
+		ctx.translate(app.width *.53, app.height *.3);
+		ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
 		ctx.restore();
 
 		roundRect(ctx, app.width/2-app.startButtonMaxWidth *.5, app.height *.75-app.startButtonHeight*1.25, app.startButtonMaxWidth, app.startButtonHeight*2, 10, true, true);
@@ -388,7 +388,7 @@ function drawScene()
 		ctx.font = "italic 130px Courier";
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
-		
+
 		ctx.fillText("Final Score " + app.score, app.width/2, app.height/2);
 	}
 }
@@ -402,8 +402,8 @@ function spawnItem()
 
     var itemTypeSelection = Math.random();
 	var fallingItem;
-    //Good guys
-    if(goodGuy) {
+	//Good guys
+	if(goodGuy) {
 		if (itemTypeSelection >= 0 && itemTypeSelection < 0.18) {
 			fallingItem = app.items.bananas;
 		}
@@ -435,7 +435,7 @@ function spawnItem()
 			fallingItem = app.items.monkey;
 		}
 		else if (itemTypeSelection >= 0.6 && itemTypeSelection < 0.8) {
-			fallingItem = app.items.ostrich;
+			fallingItem = app.items.spider;
 		}
 		else {
 			fallingItem = app.items.snake;
@@ -505,20 +505,20 @@ function incrementPregnancyCounter(dt) {
 
 function onKeyDown(event) {
 
-    if(app.state === 'play') {
-        switch (event.keyCode) {
-            case 37:  /* Left arrow was pressed */
-                if (app.horton.pos.x - app.keyboard_dx > 0) {
-                    app.horton.pos.x -= app.keyboard_dx;
-                }
-                break;
-            case 39:  /* Right arrow was pressed */
-                if (app.horton.pos.x + app.keyboard_dx < app.width) {
-                    app.horton.pos.x += app.keyboard_dx;
-                }
-                break;
-        }
-    }
+	if(app.state === 'play') {
+		switch (event.keyCode) {
+			case 37:  /* Left arrow was pressed */
+				if (app.horton.pos.x - app.keyboard_dx > 0) {
+					app.horton.pos.x -= app.keyboard_dx;
+				}
+				break;
+			case 39:  /* Right arrow was pressed */
+				if (app.horton.pos.x + app.keyboard_dx < app.width) {
+					app.horton.pos.x += app.keyboard_dx;
+				}
+				break;
+		}
+	}
 }
 
 

@@ -449,7 +449,7 @@ function spawnHorton()
 {
 	app.horton = {
 		type : 'horton',
-		pos : {x:400, y: app.height - 60},
+		pos : {x:app.width/2, y: app.height - 60},
 		angle : 0,
 		xSize : 120,
 		ySize : 120,

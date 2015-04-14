@@ -291,13 +291,13 @@ function drawScene()
 		ctx.font = "italic 20px Courier";
 		ctx.textAlign = "center";
 		if(app.collisionMessage.good) {
-			ctx.fillStyle = "#32cd32";
+			ctx.fillStyle = "#adff2f";
 		}
 		else {
 			ctx.fillStyle = "#ff0000";
 		}
 
-		ctx.fillText(app.collisionMessage.message, app.width/2, 70);
+		ctx.fillText(app.collisionMessage.message, app.width/2, 65);
 	}
 	
 	//	draw objects
@@ -329,6 +329,7 @@ function drawScene()
 		
 		ctx.fillText("Score " + app.score, app.width/2, 40);
 
+		ctx.fillStyle = "#000080";
 		ctx.textAlign = "right";
 		ctx.fillText(app.pregnancyCounter.weeks + " " + (app.pregnancyCounter.weeks == 1 ? "week" : "weeks")
 			+ " and " + app.pregnancyCounter.days + " " + (app.pregnancyCounter.days == 1 ? "day" : "days"), app.width - 15, 40);

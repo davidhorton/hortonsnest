@@ -350,6 +350,9 @@ function drawScene()
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
 
+		if(app.score < 0) {
+			ctx.fillStyle = "#ff0000";
+		}
 		ctx.fillText("Score " + app.score, app.width/2, 40);
 
 		ctx.fillStyle = "#000080";
@@ -400,7 +403,7 @@ function spawnItem()
 	var goodGuySelection = Math.random();
 	var goodGuy = goodGuySelection <= app.GOOD_ITEM_LIKELIHOOD;
 
-    var itemTypeSelection = Math.random();
+	var itemTypeSelection = Math.random();
 	var fallingItem;
 	//Good guys
 	if(goodGuy) {

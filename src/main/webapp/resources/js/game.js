@@ -16,7 +16,7 @@ var app = {
 
 	keyboard_dx : 20,
 
-	startButtonMaxWidth : 250,
+	startButtonMaxWidth : 125,
 	startButtonHeight : 20,
 
 	pregnancyCounter : {
@@ -42,6 +42,8 @@ function startApp()
 
 	app.hortonImage = createImage("horton.png");
 	app.backGroundImage = createImage("background.png");
+	app.eggInNest = createImage("eggInNest.png");
+	app.thoughtBubble = createImage("thoughtBubble.png");
 
 	createItems();
 
@@ -60,7 +62,6 @@ function startApp()
 	app.objects = [];
 
 	spawnHorton();
-	spawnItems(10);
 
 	app.canvas.addEventListener('mousemove', onMouseOrTouchMove, false);
 	app.canvas.addEventListener('touchmove', onMouseOrTouchMove, false);
@@ -276,8 +277,16 @@ function drawScene()
 		ctx.translate(Math.random() * 20 - 5, Math.random() * 20 - 5);
 	}
 
+	if(app.state === 'play' || app.state === 'pre-play') {
+		//Draw the egg first so it shows behind everything else
+		ctx.save();
+		ctx.translate(app.width-100, app.height - 40);
+		ctx.drawImage(app.eggInNest, -60, -50, 120, 100);
+		ctx.restore();
+	}
+
 	if (app.collisionMessageTimer > 0) {
-		ctx.font = "italic 20px Calibri";
+		ctx.font = "italic 20px Courier";
 		ctx.textAlign = "center";
 		if(app.collisionMessage.good) {
 			ctx.fillStyle = "#32cd32";
@@ -312,7 +321,7 @@ function drawScene()
 	//	show score, depending on game state
 	if (app.state === 'play')
 	{
-		ctx.font = "italic 25px Calibri";
+		ctx.font = "italic 25px Courier";
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
 		
@@ -323,21 +332,34 @@ function drawScene()
 			+ " and " + app.pregnancyCounter.days + " " + (app.pregnancyCounter.days == 1 ? "day" : "days"), app.width - 15, 40);
 	}
 	else if(app.state === 'pre-play') {
-		ctx.font = "30px Calibri";
-		ctx.textAlign = "center";
-		ctx.fillStyle = "#FFFF00";
-		ctx.fillText("Horton is hatching an egg! Help him", app.width/2, app.height/5 + 35);
-		ctx.fillText("catch the things he needs to prepare his", app.width/2, app.height/5 + 70);
-		ctx.fillText("nest before the egg hatches in November 2015.", app.width/2, app.height/5 + 105);
+		//Draw a big happy elephant
+		ctx.save();
+			ctx.translate(app.width/7, app.height - 120);
+			ctx.drawImage(app.horton.image, -120, -120, 240, 240);
+		ctx.restore();
 
+		//Draw a thought bubble
+		ctx.save();
+			ctx.translate(app.width *.53, app.height *.3);
+			ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
+		ctx.restore();
 
-		ctx.font = app.startButtonHeight + "px Calibri";
+		roundRect(ctx, app.width/2-app.startButtonMaxWidth *.5, app.height *.75-app.startButtonHeight*1.25, app.startButtonMaxWidth, app.startButtonHeight*2, 10, true, true);
+
+		ctx.font = "22px Courier";
 		ctx.textAlign = "center";
-		ctx.fillStyle = "#FFFF00";
-		ctx.fillText("Click to get down to business!", app.width/2, app.height*3/4, app.startButtonMaxWidth)
+		ctx.fillStyle = "#000080";
+		ctx.fillText("Horton is hatching an egg! Help him catch all", app.width/2, app.height/7 + 35);
+		ctx.fillText("the happy things so that he can prepare his", app.width/2, app.height/7 + 70);
+		ctx.fillText("nest before the elephant-bird hatches.", app.width/2, app.height/7 + 105);
+
+		ctx.font = app.startButtonHeight + "px Courier";
+		ctx.textAlign = "center";
+		ctx.fillStyle = "#000080";
+		ctx.fillText("Start!", app.width/2, app.height *.75, app.startButtonMaxWidth)
 	}
 	else {
-		ctx.font = "italic 130px Calibri";
+		ctx.font = "italic 130px Courier";
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
 		
@@ -490,8 +512,51 @@ function onMouseDown(event) {
 		var x = event.pageX;
 		var y = event.pageY;
 		if (x>=leftSide && x<=rightSide && y>=bottomSide && y<=topSide) {
+			spawnItems(10);
 			app.state = 'play';
 		}
 
+	}
+}
+
+/**
+ * Draws a rounded rectangle using the current state of the canvas.
+ * If you omit the last three params, it will draw a rectangle
+ * outline with a 5 pixel border radius
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Number} x The top left x coordinate
+ * @param {Number} y The top left y coordinate
+ * @param {Number} width The width of the rectangle
+ * @param {Number} height The height of the rectangle
+ * @param {Number} radius The corner radius. Defaults to 5;
+ * @param {Boolean} fill Whether to fill the rectangle. Defaults to false.
+ * @param {Boolean} stroke Whether to stroke the rectangle. Defaults to true.
+ */
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+	if (typeof stroke == "undefined" ) {
+		stroke = true;
+	}
+	if (typeof radius === "undefined") {
+		radius = 5;
+	}
+
+	ctx.fillStyle = "#ffffff";
+
+	ctx.beginPath();
+	ctx.moveTo(x + radius, y);
+	ctx.lineTo(x + width - radius, y);
+	ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+	ctx.lineTo(x + width, y + height - radius);
+	ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+	ctx.lineTo(x + radius, y + height);
+	ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+	ctx.lineTo(x, y + radius);
+	ctx.quadraticCurveTo(x, y, x + radius, y);
+	ctx.closePath();
+	if (stroke) {
+		ctx.stroke();
+	}
+	if (fill) {
+		ctx.fill();
 	}
 }

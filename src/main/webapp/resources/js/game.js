@@ -25,7 +25,15 @@ var app = {
 		time:0
 	},
 
-	inFinalStretch : false
+	inFinalStretch : false,
+
+	speakerSettings : {
+		on : true,
+		xPos : 20,
+		yPos : 20,
+		xSize : 50,
+		ySize : 50
+	}
 
 };
 
@@ -44,6 +52,8 @@ function startApp()
 	app.backGroundImage = createImage("background.png");
 	app.eggInNest = createImage("eggInNest.png");
 	app.thoughtBubble = createImage("thoughtBubble.png");
+	app.speakerOn = createImage("speakerOn.png");
+	app.speakerOff = createImage("speakerOff.png");
 
 	createItems();
 
@@ -249,7 +259,9 @@ function frameUpdate(timestamp)
 					app.score += o.points;
 
 					if (!o.goodGuy) {
-						app.hitSound.play();
+						if(app.speakerSettings.on) {
+							app.hitSound.play();
+						}
 						app.hitScreenShakeTimer = 0.1;	//	start screen shake effect timer
 					}
 				}
@@ -271,7 +283,19 @@ function drawScene()
 	ctx.fillRect(0, 0, app.width, app.height);
 	
 	ctx.save();	//	save before screen shake or any other rendering
+
+	//Draw background
 	ctx.drawImage(app.backGroundImage, 0, 0, app.width, app.height);
+
+	//Draw speaker
+	var speakerImage;
+	if(app.speakerSettings.on) {
+		speakerImage = app.speakerOn;
+	}
+	else {
+		speakerImage = app.speakerOff;
+	}
+	ctx.drawImage(speakerImage, app.speakerSettings.xPos, app.speakerSettings.yPos, app.speakerSettings.xSize, app.speakerSettings.ySize);
 	
 	//	screen shake
 	if (app.hitScreenShakeTimer > 0)
@@ -507,20 +531,37 @@ function onMouseOrTouchMove(event) {
 }
 
 function onMouseDown(event) {
+	var x = event.pageX;
+	var y = event.pageY;
+
 	if (app.state === 'pre-play')
 	{
 		var leftSide = app.width/2 - app.startButtonMaxWidth/2;
 		var rightSide = app.width/2 + app.startButtonMaxWidth/2;
-		var bottomSide = app.height*3/4 - app.startButtonHeight;
-		var topSide = app.height*3/4 + app.startButtonHeight;
+		var bottomSide = app.height*3/4 + app.startButtonHeight*1.25;
+		var topSide = app.height*3/4 - app.startButtonHeight*1.25;
 
-		var x = event.pageX;
-		var y = event.pageY;
-		if (x>=leftSide && x<=rightSide && y>=bottomSide && y<=topSide) {
+		if (x>=leftSide && x<=rightSide && y>=topSide && y<=bottomSide) {
 			spawnItems(10);
 			app.state = 'play';
 		}
 
+	}
+
+	var speakerLeftSide = app.speakerSettings.xPos;
+	var speakerRightSide = app.speakerSettings.xPos + app.speakerSettings.xSize;
+	var speakerBottomSide = app.speakerSettings.yPos + app.speakerSettings.ySize;
+	var speakerTopSide = app.speakerSettings.yPos;
+
+	if (x>=speakerLeftSide && x<=speakerRightSide && y>=speakerTopSide && y<=speakerBottomSide) {
+		if(app.speakerSettings.on) {
+			app.speakerSettings.on = false;
+			app.backgroundMusic.pause();
+		}
+		else {
+			app.speakerSettings.on = true;
+			app.backgroundMusic.play();
+		}
 	}
 }
 

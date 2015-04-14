@@ -66,8 +66,9 @@ function startApp()
 	app.canvas.addEventListener('touchmove', onMouseOrTouchMove, false);
 	app.canvas.addEventListener('keydown', onKeyDown, false);
 	app.canvas.addEventListener('mousedown', onMouseDown, false);
-	
-	drawScene();
+
+	//	kick off our animation loop
+	window.requestAnimationFrame(frameUpdate);
 
 }
 
@@ -170,91 +171,81 @@ function frameUpdate(timestamp)
 	var dt = (timestamp - app.lastTime)/1000;
 	app.lastTime = timestamp;
 	
-	//	difficulty and score
-	if (app.state === 'play')
-	{
-		app.difficulty += dt/8;
+	//	play sequence
+	if (app.state === 'play') {
+
+		//difficulty and score
+		app.difficulty += dt / 8;
 		app.score += Math.floor(dt * 80);
-	}
 
-	incrementPregnancyCounter(dt);
-	//Bump up (no pun intended!) the difficulty for the final stretch
-	if(app.pregnancyCounter.weeks >= 36 && !app.inFinalStretch) {
-		app.difficulty += dt*1000;
-		app.inFinalStretch = true;
-	}
-	if(app.pregnancyCounter.weeks == 40) {
-		app.state = "finished."
-	}
+		incrementPregnancyCounter(dt);
+		//Bump up (no pun intended!) the difficulty for the final stretch
+		if (app.pregnancyCounter.weeks >= 36 && !app.inFinalStretch) {
+			app.difficulty += dt * 1000;
+			app.inFinalStretch = true;
+		}
+		if (app.pregnancyCounter.weeks == 40) {
+			app.state = "finished."
+		}
 
-	//	update screen shake timer, if there is one running
-	if (app.hitScreenShakeTimer > 0)
-	{
-		app.hitScreenShakeTimer += dt;
-		if (app.hitScreenShakeTimer > app.SCREEN_SHAKE_MAX_TIME)
-		{
-			app.hitScreenShakeTimer = 0;
-		}
-	}
-
-	//	update collision message timer, if there is one running
-	if (app.collisionMessageTimer > 0)
-	{
-		app.collisionMessageTimer += dt;
-		if (app.collisionMessageTimer > app.COLLISION_MESSAGE_MAX_TIME)
-		{
-			app.collisionMessageTimer = 0;
-		}
-	}
-	
-	//	object updating (movement, rotation, etc.)
-	for (var i = app.objects.length - 1; i >= 0; i--)
-	{
-		var o = app.objects[i];
-		
-		if (o.roll)	//	update roll/orientation
-		{
-			o.angle += o.roll * dt;
-		}
-		
-		if (o.type !== 'horton')
-		{
-			if (o.speed)
-			{
-				o.pos.y += o.speed * dt;	//	move item down the screen
+		//	update screen shake timer, if there is one running
+		if (app.hitScreenShakeTimer > 0) {
+			app.hitScreenShakeTimer += dt;
+			if (app.hitScreenShakeTimer > app.SCREEN_SHAKE_MAX_TIME) {
+				app.hitScreenShakeTimer = 0;
 			}
-			
-			if (o.pos.y - o.size > app.height)	//	off bottom?
-			{
-				//	remove and respawn at top
-				app.objects.splice(i, 1);
-				spawnItem();
+		}
+
+		//	update collision message timer, if there is one running
+		if (app.collisionMessageTimer > 0) {
+			app.collisionMessageTimer += dt;
+			if (app.collisionMessageTimer > app.COLLISION_MESSAGE_MAX_TIME) {
+				app.collisionMessageTimer = 0;
 			}
-			
-			//	collision check
-			if (app.state === 'play')
+		}
+
+		//	object updating (movement, rotation, etc.)
+		for (var i = app.objects.length - 1; i >= 0; i--) {
+			var o = app.objects[i];
+
+			if (o.roll)	//	update roll/orientation
 			{
+				o.angle += o.roll * dt;
+			}
+
+			if (o.type !== 'horton') {
+				if (o.speed) {
+					o.pos.y += o.speed * dt;	//	move item down the screen
+				}
+
+				if (o.pos.y - o.size > app.height)	//	off bottom?
+				{
+					//	remove and respawn at top
+					app.objects.splice(i, 1);
+					spawnItem();
+				}
+
+				//	collision check
 				var dx = app.horton.pos.x - o.pos.x;
 				var dy = app.horton.pos.y - o.pos.y;
-				var dist = Math.sqrt(dx*dx + dy*dy);	//	distance formula
-				
+				var dist = Math.sqrt(dx * dx + dy * dy);	//	distance formula
+
 				//	this should be some other non-hardcoded distance check value,
 				//	but it'll need to be fine-tuned anyway for game feel
-				if (dist < (app.horton.size *.6))
-				{
+				if (dist < (app.horton.size * .6)) {
 					//	remove and respawn at top
 					app.objects.splice(i, 1);
 					spawnItem();
 
 					app.collisionMessageTimer = 0.1;
 					app.collisionMessage = {
-						message : o.msg + "  " + (o.goodGuy ? "+" : "") + o.points,
-						good : o.goodGuy
+						message: o.msg + "  " + (o.goodGuy ? "+" : "") + o.points,
+						good: o.goodGuy
 					};
 
 					app.score += o.points;
 
-					if(!o.goodGuy) {
+					if (!o.goodGuy) {
 						app.hitSound.play();
 						app.hitScreenShakeTimer = 0.1;	//	start screen shake effect timer
 					}
@@ -499,8 +490,6 @@ function onMouseDown(event) {
 		var x = event.pageX;
 		var y = event.pageY;
 		if (x>=leftSide && x<=rightSide && y>=bottomSide && y<=topSide) {
-			//	kick off our animation loop
-			window.requestAnimationFrame(frameUpdate);
 			app.state = 'play';
 		}
 

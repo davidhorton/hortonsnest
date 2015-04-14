@@ -80,7 +80,8 @@ function createItems() {
 			image : createImage("bottle.png"),
 			points : 50,
 			messageText : "Baby Bottle",
-			goodGuy : true
+			goodGuy : true,
+			xSize : 50
 		},
 		bananas : {
 			type : "bananas",
@@ -94,7 +95,8 @@ function createItems() {
 			image : createImage("gnome.png"),
 			points : 500,
 			messageText : "Garden Gnome",
-			goodGuy : true
+			goodGuy : true,
+			xSize : 60
 		},
 		ducky : {
 			type : "ducky",
@@ -129,7 +131,8 @@ function createItems() {
 			image : createImage("leopard.png"),
 			points : -300,
 			messageText : "Leopard",
-			goodGuy : false
+			goodGuy : false,
+			xSize : 70
 		},
 		ostrich : {
 			type : "ostrich",
@@ -219,7 +222,7 @@ function frameUpdate(timestamp)
 					o.pos.y += o.speed * dt;	//	move item down the screen
 				}
 
-				if (o.pos.y - o.size > app.height)	//	off bottom?
+				if (o.pos.y - o.ySize > app.height)	//	off bottom?
 				{
 					//	remove and respawn at top
 					app.objects.splice(i, 1);
@@ -231,9 +234,8 @@ function frameUpdate(timestamp)
 				var dy = app.horton.pos.y - o.pos.y;
 				var dist = Math.sqrt(dx * dx + dy * dy);	//	distance formula
 
-				//	this should be some other non-hardcoded distance check value,
-				//	but it'll need to be fine-tuned anyway for game feel
-				if (dist < (app.horton.size * .6)) {
+				//This assumes that Horton's xSize is the same as his ySize (i.e. he's round)
+				if (dist < (app.horton.xSize * .6)) {
 					//	remove and respawn at top
 					app.objects.splice(i, 1);
 					spawnItem();
@@ -311,7 +313,7 @@ function drawScene()
 		ctx.save();
 			ctx.translate(o.pos.x, o.pos.y);
 			ctx.rotate(o.angle);
-			ctx.drawImage(o.image, -o.size/2, -o.size/2, o.size, o.size);
+			ctx.drawImage(o.image, -o.xSize/2, -o.ySize/2, o.xSize, o.ySize);
 		ctx.restore();
 	}
 	
@@ -422,7 +424,8 @@ function spawnItem()
 		pos : {x:Math.random() * app.width, y:Math.random() * -app.height},
 		angle : Math.random() * Math.PI,
 		roll : Math.random() * rollRange - rollRange/2,
-		size : 80,
+		ySize : 80,
+		xSize : fallingItem.xSize === undefined ? 80 : fallingItem.xSize,
 		image : fallingItem.image,
 		speed : 150 + 25 * app.difficulty,
 		points : fallingItem.points,
@@ -448,7 +451,8 @@ function spawnHorton()
 		type : 'horton',
 		pos : {x:400, y: app.height - 60},
 		angle : 0,
-		size : 120,
+		xSize : 120,
+		ySize : 120,
 		image : app.hortonImage
 	};
 	app.objects.push(app.horton);

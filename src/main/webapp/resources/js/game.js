@@ -20,7 +20,7 @@ var app = {
 	startButtonHeight : 20,
 
 	pregnancyCounter : {
-		weeks:38,
+		weeks:0,
 		days:0,
 		time:0
 	},
@@ -402,10 +402,6 @@ function drawScene()
 {
 	var ctx = app.ctx;
 
-	//Make the screen blue
-	/*ctx.fillStyle = "#0080ff";
-	ctx.fillRect(-5, -5, app.width+5, app.height+5);*/
-
 	ctx.save();	//	save before screen shake or any other rendering
 
 	//Draw background
@@ -585,7 +581,7 @@ function drawScene()
 			ctx.font = "26px Courier";
 			ctx.textAlign = "center";
 			ctx.fillStyle = "#000080";
-			ctx.fillText("Elephant-bird coming November 2015!", app.width/2, app.height/7 + 70);
+			ctx.fillText("Baby Horton coming November 2015!", app.width/2, app.height/7 + 70);
 		}
 	}
 }

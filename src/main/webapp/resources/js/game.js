@@ -20,7 +20,7 @@ var app = {
 	startButtonHeight : 20,
 
 	pregnancyCounter : {
-		weeks:0,
+		weeks:38,
 		days:0,
 		time:0
 	},
@@ -33,6 +33,33 @@ var app = {
 		yPos : 20,
 		xSize : 50,
 		ySize : 50
+	},
+
+	showEmptyNest : true,
+
+	endingSettings : {
+		showBrokenEgg : false,
+		playingFinalMusic : false,
+		elephantBirdSettings : {
+			show : false,
+			risingWeight : 0
+		},
+		phaseOneTimer : 0, 		//pause until the background music stops and/or changes
+		phaseOneLimit : 0,		//Unused for now
+		phaseTwoTimer : 0,		//pause before "I think it's hatching!" message is showing
+		phaseTwoLimit : 1,
+		phaseThreeTimer : 0,	//pause with "I think it's hatching!" message showing
+		phaseThreeLimit : 3,
+		phaseFourTimer : 0,		//pause before egg hatches
+		phaseFourLimit : 1,
+		phaseFiveTimer : 0,		//pause with egg hatched image
+		phaseFiveLimit : 1,
+		phaseSixTimer : 0,		//while elephant bird flies up
+		phaseSixLimit : 1,
+		phaseSevenTimer : 0,	//pause before happy music starts and ending message is shown
+		phaseSevenLimit : 0.5,
+		phaseEightTimer : 0,	//pause before the leader board is shown
+		phaseEightLimit : 10
 	}
 
 };
@@ -48,24 +75,30 @@ function startApp()
 	app.width = app.canvas.width;
 	app.height = app.canvas.height;
 
+	//Load images
 	app.hortonImage = createImage("horton.png");
 	app.backGroundImage = createImage("background.png");
 	app.eggInNest = createImage("eggInNest.png");
 	app.thoughtBubble = createImage("thoughtBubble.png");
 	app.speakerOn = createImage("speakerOn.png");
 	app.speakerOff = createImage("speakerOff.png");
+	app.emptyNest = createImage("emptyNest.png");
+	app.lilHortonInEgg = createImage("hortonHatchedEgg.png");
+	app.emptyHatchedEgg = createImage("emptyHatchedEgg.png");
+	app.elephantBird = createImage("elephantBird.png");
 
 	createItems();
 
-	app.hitSound = new Audio();
-	app.hitSound.src = "resources/audio/elephantHurt.mp3";
-
-	//Background music
-	app.backgroundMusic = new Audio("resources/audio/background.mp3");
-	app.backgroundMusic.addEventListener('ended', function() {
-		this.currentTime = 0;
-		this.play();
-	}, false);
+	//Load sounds
+	app.hitSound = createAudio("elephantHurt.mp3");
+	app.eggHatching = createAudio("eggHatching.mp3");
+	app.eggHatching.volume = 1.0;
+	app.endingSequenceMusic = createAudio("endingSequence.mp3");
+	makeAudioRepeat(app.endingSequenceMusic);
+	app.finalMusic = createAudio("happyEndingMusic.mp3");
+	makeAudioRepeat(app.finalMusic);
+	app.backgroundMusic = createAudio("background.mp3");
+	makeAudioRepeat(app.backgroundMusic);
 	app.backgroundMusic.play();
 
 	//	our master list of objects
@@ -174,6 +207,19 @@ function createImage(filename) {
 	return image;
 }
 
+function createAudio(filename) {
+	var audio = new Audio();
+	audio.src = "resources/audio/" + filename;
+	return audio;
+}
+
+function makeAudioRepeat(audio) {
+	audio.addEventListener('ended', function() {
+		this.currentTime = 0;
+		this.play();
+	}, false);
+}
+
 //	update
 function frameUpdate(timestamp)
 {
@@ -198,7 +244,10 @@ function frameUpdate(timestamp)
 			app.inFinalStretch = true;
 		}
 		if (app.pregnancyCounter.weeks == 40) {
-			app.state = "finished."
+			app.state = "finished";
+			app.endingSettings.phaseOneTimer = 0.1;
+			app.hitScreenShakeTimer = 0;
+			app.objects.length = 0;
 		}
 
 		//	update screen shake timer, if there is one running
@@ -217,6 +266,8 @@ function frameUpdate(timestamp)
 			}
 		}
 
+	}
+	if(app.state === 'play') {
 		//	object updating (movement, rotation, etc.)
 		for (var i = app.objects.length - 1; i >= 0; i--) {
 			var o = app.objects[i];
@@ -235,7 +286,9 @@ function frameUpdate(timestamp)
 				{
 					//	remove and respawn at top
 					app.objects.splice(i, 1);
-					spawnItem();
+					if(app.state === 'play') {
+						spawnItem();
+					}
 				}
 
 				//	collision check
@@ -243,27 +296,99 @@ function frameUpdate(timestamp)
 				var dy = app.horton.pos.y - o.pos.y;
 				var dist = Math.sqrt(dx * dx + dy * dy);	//	distance formula
 
-				//This assumes that Horton's xSize is the same as his ySize (i.e. he's round)
-				if (dist < (app.horton.xSize * .6)) {
-					//	remove and respawn at top
-					app.objects.splice(i, 1);
-					spawnItem();
+				if(app.state === 'play') {
+					//This assumes that Horton's xSize is the same as his ySize (i.e. he's round)
+					if (dist < (app.horton.xSize * .6)) {
+						//	remove and respawn at top
+						app.objects.splice(i, 1);
+						spawnItem();
 
-					app.collisionMessageTimer = 0.1;
-					app.collisionMessage = {
-						message: o.msg + "  " + (o.goodGuy ? "+" : "") + o.points,
-						good: o.goodGuy
-					};
+						app.collisionMessageTimer = 0.1;
+						app.collisionMessage = {
+							message: o.msg + "  " + (o.goodGuy ? "+" : "") + o.points,
+							good: o.goodGuy
+						};
 
-					app.score += o.points;
+						app.score += o.points;
 
-					if (!o.goodGuy) {
-						if(app.speakerSettings.on) {
-							app.hitSound.play();
+						if (!o.goodGuy) {
+							if (app.speakerSettings.on) {
+								app.hitSound.play();
+							}
+							app.hitScreenShakeTimer = 0.1;	//	start screen shake effect timer
 						}
-						app.hitScreenShakeTimer = 0.1;	//	start screen shake effect timer
 					}
 				}
+			}
+		}
+	}
+	if(app.state === "finished") {
+		if(app.endingSettings.phaseOneTimer > 0) {
+			app.endingSettings.phaseOneTimer += dt;
+			if(app.endingSettings.phaseOneTimer > app.endingSettings.phaseOneLimit) {
+				app.endingSettings.phaseOneTimer = 0;
+				app.endingSettings.phaseTwoTimer = 0.1;
+				app.backgroundMusic.pause();
+				if (app.speakerSettings.on) {
+					app.endingSequenceMusic.play();
+				}
+			}
+		}
+		else if(app.endingSettings.phaseTwoTimer > 0) {
+			app.endingSettings.phaseTwoTimer += dt;
+			if(app.endingSettings.phaseTwoTimer > app.endingSettings.phaseTwoLimit) {
+				app.endingSettings.phaseTwoTimer = 0;
+				app.endingSettings.phaseThreeTimer = 0.1;
+			}
+		}
+		else if(app.endingSettings.phaseThreeTimer > 0) {
+			app.endingSettings.phaseThreeTimer += dt;
+			if(app.endingSettings.phaseThreeTimer > app.endingSettings.phaseThreeLimit) {
+				app.endingSettings.phaseThreeTimer = 0;
+				app.endingSettings.phaseFourTimer = 0.1;
+			}
+		}
+		else if(app.endingSettings.phaseFourTimer > 0) {
+			app.endingSettings.phaseFourTimer += dt;
+			if(app.endingSettings.phaseFourTimer > app.endingSettings.phaseFourLimit) {
+				app.endingSettings.phaseFourTimer = 0;
+				app.endingSettings.phaseFiveTimer = 0.1;
+				app.showEmptyNest = false;
+			}
+		}
+		else if(app.endingSettings.phaseFiveTimer > 0) {
+			app.endingSettings.phaseFiveTimer += dt;
+			if(app.endingSettings.phaseFiveTimer > app.endingSettings.phaseFiveLimit) {
+				app.endingSettings.phaseFiveTimer = 0;
+				app.endingSettings.phaseSixTimer = 0.1;
+				app.endingSettings.showBrokenEgg = true;
+				app.endingSettings.elephantBirdSettings.finalXPosition = app.width - 100;
+				app.endingSettings.elephantBirdSettings.finalYPosition = app.height *.5;
+				app.endingSettings.elephantBirdSettings.size = 140;
+				if (app.speakerSettings.on) {
+					app.eggHatching.play();
+				}
+			}
+		}
+		else if(app.endingSettings.phaseSixTimer > 0) {
+			app.endingSettings.phaseSixTimer += dt;
+			app.endingSettings.elephantBirdSettings.risingWeight += 8;
+			if(app.endingSettings.phaseSixTimer > app.endingSettings.phaseSixLimit) {
+				app.endingSettings.phaseSixTimer = 0;
+				app.endingSettings.phaseSevenTimer = 0.1;
+				app.endingSettings.elephantBirdSettings.show = true;
+				app.endingSequenceMusic.pause();
+				if (app.speakerSettings.on) {
+					app.finalMusic.play();
+				}
+				app.endingSettings.playingFinalMusic = true;
+			}
+		}
+		else if(app.endingSettings.phaseSevenTimer > 0) {
+			app.endingSettings.phaseSevenTimer += dt;
+			if(app.endingSettings.phaseSevenTimer > app.endingSettings.phaseSevenLimit) {
+				app.endingSettings.phaseSevenTimer = 0;
+				app.endingSettings.phaseEightTimer = 0.1;
 			}
 		}
 	}
@@ -278,8 +403,8 @@ function drawScene()
 	var ctx = app.ctx;
 
 	//Make the screen blue
-	ctx.fillStyle = "#0080ff";
-	ctx.fillRect(-5, -5, app.width+5, app.height+5);
+	/*ctx.fillStyle = "#0080ff";
+	ctx.fillRect(-5, -5, app.width+5, app.height+5);*/
 
 	ctx.save();	//	save before screen shake or any other rendering
 
@@ -302,15 +427,13 @@ function drawScene()
 		ctx.translate(Math.random() * 20 - 5, Math.random() * 20 - 5);
 	}
 
-	if(app.state === 'play' || app.state === 'pre-play') {
-		//Draw the egg first so it shows behind everything else
-		ctx.save();
-		ctx.translate(app.width-100, app.height - 40);
-		ctx.drawImage(app.eggInNest, -60, -50, 120, 100);
-		ctx.restore();
-	}
+	//Draw the egg first so it shows behind everything else
+	ctx.save();
+		ctx.translate(app.width - 100, app.height - 40);
+		ctx.drawImage(app.showEmptyNest ? app.eggInNest : app.emptyNest, -60, -50, 120, 100);
+	ctx.restore();
 
-	if (app.collisionMessageTimer > 0) {
+	if (app.collisionMessageTimer > 0 && app.state !== "finished") {
 		ctx.font = "italic 20px Courier";
 		ctx.textAlign = "center";
 		if(app.collisionMessage.good) {
@@ -334,9 +457,9 @@ function drawScene()
 
 		//	draw object image, centered/rotated around its pos
 		ctx.save();
-		ctx.translate(o.pos.x, o.pos.y);
-		ctx.rotate(o.angle);
-		ctx.drawImage(o.image, -o.xSize/2, -o.ySize/2, o.xSize, o.ySize);
+			ctx.translate(o.pos.x, o.pos.y);
+			ctx.rotate(o.angle);
+			ctx.drawImage(o.image, -o.xSize/2, -o.ySize/2, o.xSize, o.ySize);
 		ctx.restore();
 	}
 
@@ -363,14 +486,14 @@ function drawScene()
 	else if(app.state === 'pre-play') {
 		//Draw a big happy elephant
 		ctx.save();
-		ctx.translate(app.width/7, app.height - 120);
-		ctx.drawImage(app.horton.image, -120, -120, 240, 240);
+			ctx.translate(app.width/7, app.height - 120);
+			ctx.drawImage(app.horton.image, -120, -120, 240, 240);
 		ctx.restore();
 
 		//Draw a thought bubble
 		ctx.save();
-		ctx.translate(app.width *.53, app.height *.3);
-		ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
+			ctx.translate(app.width *.53, app.height *.3);
+			ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
 		ctx.restore();
 
 		roundRect(ctx, app.width/2-app.startButtonMaxWidth *.5, app.height *.75-app.startButtonHeight*1.25, app.startButtonMaxWidth, app.startButtonHeight*2, 10, true, true);
@@ -387,12 +510,83 @@ function drawScene()
 		ctx.fillStyle = "#000080";
 		ctx.fillText("Start!", app.width/2, app.height *.75, app.startButtonMaxWidth)
 	}
-	else {
-		ctx.font = "italic 130px Courier";
+	else if(app.state === "finished") {
+		ctx.font = "italic 25px Courier";
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
 
-		ctx.fillText("Final Score " + app.score, app.width/2, app.height/2);
+		if(app.score < 0) {
+			ctx.fillStyle = "#ff0000";
+		}
+		ctx.fillText("Final Score " + app.score, app.width/2, 40);
+
+		ctx.fillStyle = "#000080";
+		ctx.textAlign = "right";
+		ctx.fillText("40 weeks!", app.width - 15, 40);
+
+		//Draw a big happy elephant
+		ctx.save();
+			ctx.translate(app.width/7, app.height - 120);
+			ctx.drawImage(app.horton.image, -120, -120, 240, 240);
+		ctx.restore();
+
+		//Because this will show across multiple phase timers, it just has its own boolean
+		if(app.endingSettings.showBrokenEgg) {
+			ctx.save();
+				ctx.translate(app.width - 100, app.height - 65);
+				ctx.drawImage(app.emptyHatchedEgg, -45, -37.5, 90, 75);
+			ctx.restore();
+		}
+
+		//This can also span multiple phase timers
+		if(app.endingSettings.elephantBirdSettings.show) {
+			ctx.save();
+				ctx.translate(app.endingSettings.elephantBirdSettings.finalXPosition, app.endingSettings.elephantBirdSettings.finalYPosition);
+				ctx.drawImage(app.elephantBird, -app.endingSettings.elephantBirdSettings.size/2, -app.endingSettings.elephantBirdSettings.size/2, app.endingSettings.elephantBirdSettings.size, app.endingSettings.elephantBirdSettings.size);
+			ctx.restore();
+		}
+
+		if(app.endingSettings.phaseThreeTimer > 0) {
+			//Draw a thought bubble
+			ctx.save();
+				ctx.translate(app.width *.53, app.height *.3);
+				ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
+			ctx.restore();
+
+			ctx.font = "26px Courier";
+			ctx.textAlign = "center";
+			ctx.fillStyle = "#000080";
+			ctx.fillText("I think it's hatching!", app.width/2, app.height/7 + 70);
+		}
+		//Show the elephant bird sitting in its hatched egg
+		else if(app.endingSettings.phaseFiveTimer > 0) {
+			ctx.save();
+				ctx.translate(app.width - 100, app.height - 65);
+				ctx.drawImage(app.lilHortonInEgg, -45, -37.5, 90, 75);
+			ctx.restore();
+		}
+		//Fly up with the elephant bird
+		else if(app.endingSettings.phaseSixTimer > 0) {
+			var weight = app.endingSettings.phaseSixTimer/app.endingSettings.phaseSixLimit;
+			var risingYPosition = app.height - app.endingSettings.elephantBirdSettings.risingWeight - 65;
+			var yPosition = risingYPosition <= app.endingSettings.elephantBirdSettings.finalYPosition ? app.endingSettings.elephantBirdSettings.finalYPosition : risingYPosition;
+			ctx.save();
+				ctx.translate(app.endingSettings.elephantBirdSettings.finalXPosition, yPosition);
+				ctx.drawImage(app.elephantBird, -(app.endingSettings.elephantBirdSettings.size/2)*weight, -(app.endingSettings.elephantBirdSettings.size/2)*weight, app.endingSettings.elephantBirdSettings.size*weight, app.endingSettings.elephantBirdSettings.size*weight);
+			ctx.restore();
+		}
+		else if(app.endingSettings.phaseEightTimer > 0) {
+			//Draw a thought bubble
+			ctx.save();
+				ctx.translate(app.width *.53, app.height *.3);
+				ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
+			ctx.restore();
+
+			ctx.font = "26px Courier";
+			ctx.textAlign = "center";
+			ctx.fillStyle = "#000080";
+			ctx.fillText("Elephant-bird coming November 2015!", app.width/2, app.height/7 + 70);
+		}
 	}
 }
 
@@ -556,13 +750,27 @@ function onMouseDown(event) {
 	var speakerTopSide = app.speakerSettings.yPos;
 
 	if (x>=speakerLeftSide && x<=speakerRightSide && y>=speakerTopSide && y<=speakerBottomSide) {
+		var currentMusic;
+		if(app.state !== "finished") {
+			currentMusic = app.backgroundMusic;
+		}
+		else {
+			if(app.endingSettings.playingFinalMusic) {
+				currentMusic = app.finalMusic;
+			}
+			else {
+				currentMusic = app.endingSequenceMusic;
+			}
+		}
+
+
 		if(app.speakerSettings.on) {
 			app.speakerSettings.on = false;
-			app.backgroundMusic.pause();
+			currentMusic.pause();
 		}
 		else {
 			app.speakerSettings.on = true;
-			app.backgroundMusic.play();
+			currentMusic.play();
 		}
 	}
 }

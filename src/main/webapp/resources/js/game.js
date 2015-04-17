@@ -1,68 +1,75 @@
-var app = {
+var app = createApp();
 
-	score : 0,
-	difficulty : 0,
+function createApp() {
+	return {
+		score : 0,
+		difficulty : 0,
 
-	state : 'pre-play',
+		state : 'pre-play',
 
-	hitScreenShakeTimer : 0,
-	SCREEN_SHAKE_MAX_TIME : 0.5,
+		hitScreenShakeTimer : 0,
+		SCREEN_SHAKE_MAX_TIME : 0.5,
 
-	collisionMessageTimer : 0,
-	COLLISION_MESSAGE_MAX_TIME : 1.5,
+		collisionMessageTimer : 0,
+		COLLISION_MESSAGE_MAX_TIME : 1.5,
 
-	GOOD_ITEM_LIKELIHOOD : 0.6,
-	WEEKLY_BAD_INCREASE : 0.01,
+		GOOD_ITEM_LIKELIHOOD : 0.6,
+		WEEKLY_BAD_INCREASE : 0.01,
 
-	keyboard_dx : 20,
+		keyboard_dx : 20,
 
-	startButtonMaxWidth : 125,
-	startButtonHeight : 20,
+		startButtonMaxWidth : 125,
+		startButtonHeight : 20,
 
-	pregnancyCounter : {
-		weeks:0,
-		days:0,
-		time:0
-	},
-
-	inFinalStretch : false,
-
-	speakerSettings : {
-		on : true,
-		xPos : 20,
-		yPos : 20,
-		xSize : 50,
-		ySize : 50
-	},
-
-	showEmptyNest : true,
-
-	endingSettings : {
-		showBrokenEgg : false,
-		playingFinalMusic : false,
-		elephantBirdSettings : {
-			show : false,
-			risingWeight : 0
+		pregnancyCounter : {
+			weeks:35,
+			days:0,
+			time:0
 		},
-		phaseOneTimer : 0, 		//pause until the background music stops and/or changes
-		phaseOneLimit : 0,		//Unused for now
-		phaseTwoTimer : 0,		//pause before "I think it's hatching!" message is showing
-		phaseTwoLimit : 1,
-		phaseThreeTimer : 0,	//pause with "I think it's hatching!" message showing
-		phaseThreeLimit : 3,
-		phaseFourTimer : 0,		//pause before egg hatches
-		phaseFourLimit : 1,
-		phaseFiveTimer : 0,		//pause with egg hatched image
-		phaseFiveLimit : 1,
-		phaseSixTimer : 0,		//while elephant bird flies up
-		phaseSixLimit : 1,
-		phaseSevenTimer : 0,	//pause before happy music starts and ending message is shown
-		phaseSevenLimit : 0.5,
-		phaseEightTimer : 0,	//pause before the leader board is shown
-		phaseEightLimit : 10
-	}
 
-};
+		inFinalStretch : false,
+
+		speakerSettings : {
+			on : true,
+			xPos : 20,
+			yPos : 20,
+			xSize : 50,
+			ySize : 50
+		},
+
+		showEmptyNest : true,
+
+		endingSettings : {
+			showBrokenEgg : false,
+			playingFinalMusic : false,
+			elephantBirdSettings : {
+				show : false,
+				risingWeight : 0
+			},
+			nextButton : {
+				height : 20,
+				maxWidth : 140,
+				ready : false
+			},
+			phaseOneTimer : 0, 		//pause until the background music stops and/or changes
+			phaseOneLimit : 0,		//Unused for now
+			phaseTwoTimer : 0,		//pause before "I think it's hatching!" message is showing
+			phaseTwoLimit : 1,
+			phaseThreeTimer : 0,	//pause with "I think it's hatching!" message showing
+			phaseThreeLimit : 3,
+			phaseFourTimer : 0,		//pause before egg hatches
+			phaseFourLimit : 1,
+			phaseFiveTimer : 0,		//pause with egg hatched image
+			phaseFiveLimit : 1,
+			phaseSixTimer : 0,		//while elephant bird flies up
+			phaseSixLimit : 1,
+			phaseSevenTimer : 0,	//pause before happy music starts and ending message is shown
+			phaseSevenLimit : 0.5,
+			phaseEightTimer : 0		//pause before the leader board is shown
+		}
+
+	};
+}
 
 //	init
 function startApp()
@@ -114,6 +121,13 @@ function startApp()
 	//	kick off our animation loop
 	window.requestAnimationFrame(frameUpdate);
 
+}
+
+function restartApp() {
+
+	app.finalMusic.pause();
+	app = createApp();
+	startApp();
 }
 
 function createItems() {
@@ -389,6 +403,7 @@ function frameUpdate(timestamp)
 			if(app.endingSettings.phaseSevenTimer > app.endingSettings.phaseSevenLimit) {
 				app.endingSettings.phaseSevenTimer = 0;
 				app.endingSettings.phaseEightTimer = 0.1;
+				app.endingSettings.nextButton.ready = true;
 			}
 		}
 	}
@@ -582,6 +597,13 @@ function drawScene()
 			ctx.textAlign = "center";
 			ctx.fillStyle = "#000080";
 			ctx.fillText("Baby Horton coming November 2015!", app.width/2, app.height/7 + 70);
+
+			roundRect(ctx, app.width/2-app.endingSettings.nextButton.maxWidth *.5, app.height *.75-app.endingSettings.nextButton.height*1.25, app.endingSettings.nextButton.maxWidth, app.endingSettings.nextButton.height*2, 10, true, true);
+
+			ctx.font = app.endingSettings.nextButton.height + "px Courier";
+			ctx.textAlign = "center";
+			ctx.fillStyle = "#000080";
+			ctx.fillText("Play again?", app.width/2, app.height *.75, app.endingSettings.nextButton.maxWidth);
 		}
 	}
 }
@@ -726,6 +748,7 @@ function onMouseDown(event) {
 	var x = event.pageX;
 	var y = event.pageY;
 
+	//The Start button
 	if (app.state === 'pre-play')
 	{
 		var leftSide = app.width/2 - app.startButtonMaxWidth/2;
@@ -740,6 +763,7 @@ function onMouseDown(event) {
 
 	}
 
+	//The speaker button
 	var speakerLeftSide = app.speakerSettings.xPos;
 	var speakerRightSide = app.speakerSettings.xPos + app.speakerSettings.xSize;
 	var speakerBottomSide = app.speakerSettings.yPos + app.speakerSettings.ySize;
@@ -767,6 +791,18 @@ function onMouseDown(event) {
 		else {
 			app.speakerSettings.on = true;
 			currentMusic.play();
+		}
+	}
+
+	//The Next button at the end
+	if(app.endingSettings.nextButton.ready) {
+		var nleftSide = app.width/2 - app.endingSettings.nextButton.maxWidth/2;
+		var nrightSide = app.width/2 + app.endingSettings.nextButton.maxWidth/2;
+		var nbottomSide = app.height*3/4 + app.endingSettings.nextButton.height*1.25;
+		var ntopSide = app.height*3/4 - app.endingSettings.nextButton.height*1.25;
+
+		if (x>=nleftSide && x<=nrightSide && y>=ntopSide && y<=nbottomSide) {
+			restartApp();
 		}
 	}
 }

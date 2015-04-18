@@ -740,12 +740,14 @@ function onKeyDown(event) {
 function onMouseOrTouchMove(e) {
 	if (app.state === 'play')
 	{
-		var x = 0;
 		if(e.offsetX) {
 			x = e.offsetX;
+			y = e.offsetY;
 		}
-		else if(e.layerX) {
-			x = e.layerX;
+		else {
+			var canvas = $('#canvas');
+			x = e.pageX - canvas.offset().left;
+			y = e.pageY - canvas.offset().top;
 		}
 
 		app.horton.pos.x = x;
@@ -753,8 +755,6 @@ function onMouseOrTouchMove(e) {
 }
 
 function onMouseDown(e) {
-	//var x = event.pageX;
-	//var y = event.pageY;
 
 	var x = 0, y = 0;
 
@@ -762,9 +762,10 @@ function onMouseDown(e) {
 		x = e.offsetX;
 		y = e.offsetY;
 	}
-	else if(e.layerX) {
-		x = e.layerX;
-		y = e.layerY;
+	else {
+		var canvas = $('#canvas');
+		x = e.pageX - canvas.offset().left;
+		y = e.pageY - canvas.offset().top;
 	}
 
 	//The Start button

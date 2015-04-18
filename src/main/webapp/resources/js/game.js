@@ -22,7 +22,7 @@ function createApp() {
 		startButtonHeight : 20,
 
 		pregnancyCounter : {
-			weeks:35,
+			weeks:0,
 			days:0,
 			time:0
 		},
@@ -513,7 +513,7 @@ function drawScene()
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#000080";
 		ctx.fillText("Horton is hatching an egg! Help him catch all", app.width/2, app.height/7 + 35);
-		ctx.fillText("the happy things so that he can prepare his", app.width/2, app.height/7 + 70);
+		ctx.fillText("of the happy things so that he can prepare his", app.width/2, app.height/7 + 70);
 		ctx.fillText("nest before the elephant-bird hatches.", app.width/2, app.height/7 + 105);
 
 		ctx.font = app.startButtonHeight + "px Courier";
@@ -737,16 +737,35 @@ function onKeyDown(event) {
 }
 
 
-function onMouseOrTouchMove(event) {
+function onMouseOrTouchMove(e) {
 	if (app.state === 'play')
 	{
-		app.horton.pos.x = event.pageX;
+		var x = 0;
+		if(e.offsetX) {
+			x = e.offsetX;
+		}
+		else if(e.layerX) {
+			x = e.layerX;
+		}
+
+		app.horton.pos.x = x;
 	}
 }
 
-function onMouseDown(event) {
-	var x = event.pageX;
-	var y = event.pageY;
+function onMouseDown(e) {
+	//var x = event.pageX;
+	//var y = event.pageY;
+
+	var x = 0, y = 0;
+
+	if(e.offsetX) {
+		x = e.offsetX;
+		y = e.offsetY;
+	}
+	else if(e.layerX) {
+		x = e.layerX;
+		y = e.layerY;
+	}
 
 	//The Start button
 	if (app.state === 'pre-play')

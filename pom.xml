@@ -8,7 +8,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>HortonsNestGame</name>
-    <url>http://www.hortonsnest.com</url>
+    <url>http://game-hortonsnest.rhcloud.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -65,7 +65,7 @@
     </dependencies>
 
     <build>
-        <finalName>hortonsnest</finalName>
+        <finalName>ROOT</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

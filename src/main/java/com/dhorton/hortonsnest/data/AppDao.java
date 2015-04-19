@@ -8,5 +8,6 @@ import java.util.List;
 public interface AppDao {
 
     List<Leader> getLeaders();
+    Integer getAndIncrementSiteVisitCount();
 
 }

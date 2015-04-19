@@ -22,4 +22,10 @@ public class AppDaoTest {
         dao.getLeaders();
     }
 
+    @Test
+    public void testGetAndIncrementSiteVisitCount() {
+        Integer visitCount = dao.getAndIncrementSiteVisitCount();
+        System.out.println("Visit count is: " + visitCount);
+    }
+
 }

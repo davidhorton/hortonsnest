@@ -43,6 +43,19 @@ public class AppJdbcDao extends JdbcDaoSupport implements AppDao {
         return trimmedLeaders;
     }
 
+    @Override
+    public Integer getAndIncrementSiteVisitCount() {
+        //Get current site count
+        String sql = "select \"count\" from \"siteVisits\" where \"id\" = 1";
+        Integer visitCount = getJdbcTemplate().queryForInt(sql);
+
+        //Increment the site count
+        String updateSql = "UPDATE \"siteVisits\" SET \"count\"=((select \"count\" from \"siteVisits\" where \"id\" = 1) + 1) WHERE \"id\"=1";
+        getJdbcTemplate().update(updateSql);
+
+        return visitCount;
+    }
+
     public class CustomComparator implements Comparator<Leader> {
         @Override
         public int compare(Leader o1, Leader o2) {

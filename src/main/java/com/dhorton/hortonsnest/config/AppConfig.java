@@ -4,7 +4,6 @@ import org.postgresql.Driver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -47,14 +46,15 @@ public class AppConfig {
     public DriverManagerDataSource appDataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName(Driver.class.getName());
-        //ssl=true&amp;sslfactory=org.postgresql.ssl.NonValidatingFactory
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+
         Properties prop = new Properties();
         prop.setProperty("ssl", "true");
         prop.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
         dataSource.setConnectionProperties(prop);
-        dataSource.setUrl(url);
-        dataSource.setUsername(username);
-        dataSource.setPassword(password);
+
         return dataSource;
     }
 

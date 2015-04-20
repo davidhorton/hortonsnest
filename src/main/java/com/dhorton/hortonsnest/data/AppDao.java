@@ -9,5 +9,6 @@ public interface AppDao {
 
     List<Leader> getLeaders();
     Integer getAndIncrementSiteVisitCount();
+    void insertNewLeader(String name, Integer score);
 
 }

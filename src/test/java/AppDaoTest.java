@@ -28,4 +28,9 @@ public class AppDaoTest {
         System.out.println("Visit count is: " + visitCount);
     }
 
+    @Test
+    public void test() {
+        dao.insertNewLeader("Testman McDuff", 44444);
+    }
+
 }

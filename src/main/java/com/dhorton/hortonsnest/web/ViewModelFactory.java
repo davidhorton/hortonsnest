@@ -14,9 +14,9 @@ public class ViewModelFactory {
     private AppDao dao;
 
     public ViewModel createViewModel() {
-        Integer visitCount = dao.getAndIncrementSiteVisitCount();
         ViewModel viewModel = new ViewModel();
-        viewModel.setPageViews(visitCount);
+        viewModel.setPageViews(dao.getAndIncrementSiteVisitCount());
+        viewModel.setLeaders(dao.getLeaders());
         return viewModel;
     }
 

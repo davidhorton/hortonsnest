@@ -15,7 +15,7 @@ public class Leader {
     }
 
     public String getName() {
-        return name;
+        return name == null || "".equals(name) ? "N/A" : name;
     }
 
     public void setName(String name) {

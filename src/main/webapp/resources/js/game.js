@@ -42,11 +42,23 @@ function createApp() {
 		endingSettings : {
 			showBrokenEgg : false,
 			playingFinalMusic : false,
+			showLeaderboard : false,
+			showSubmitButton : false,
 			elephantBirdSettings : {
 				show : false,
 				risingWeight : 0
 			},
 			nextButton : {
+				height : 20,
+				maxWidth : 140,
+				ready : false
+			},
+			playAgainButton : {
+				height : 20,
+				maxWidth : 160,
+				ready : false
+			},
+			submitScoreButton : {
 				height : 20,
 				maxWidth : 140,
 				ready : false
@@ -65,15 +77,31 @@ function createApp() {
 			phaseSixLimit : 1,
 			phaseSevenTimer : 0,	//pause before happy music starts and ending message is shown
 			phaseSevenLimit : 0.5,
-			phaseEightTimer : 0		//pause before the leader board is shown
+			phaseEightTimer : 0		//the 'leaderboard' phase
 		}
 
 	};
 }
 
 //	init
-function startApp()
+function startApp(submitScoreUrl, getLeadersUrl)
 {
+	//This is information from the server
+	app.submitScoreUrl = submitScoreUrl;
+	app.getLeadersUrl = getLeadersUrl;
+
+	//Fetch the latest high scores
+	$.ajax({
+		url : app.getLeadersUrl,
+		type : 'GET',
+		success : function(data) {
+			app.leaders = data;
+		},
+		error : function(request,error) {
+			alert("An error happened getting the high scores. Go tell David H! Make haste!");
+		}
+	});
+
 	//	set up our references to canvas and drawing context
 	app.canvas = document.getElementById('canvas');
 	app.ctx = app.canvas.getContext('2d');
@@ -124,10 +152,14 @@ function startApp()
 }
 
 function restartApp() {
-
+	$(".leaderboard-container").hide();
+	$(".highScoreName").html("");
+	$(".highScore").html("");
 	app.finalMusic.pause();
+	var submitScoreUrl = app.submitScoreUrl;
+	var getLeadersUrl = app.getLeadersUrl;
 	app = createApp();
-	startApp();
+	startApp(submitScoreUrl, getLeadersUrl);
 }
 
 function createItems() {
@@ -587,25 +619,52 @@ function drawScene()
 			ctx.restore();
 		}
 		else if(app.endingSettings.phaseEightTimer > 0) {
-			//Draw a thought bubble
-			ctx.save();
-				ctx.translate(app.width *.53, app.height *.3);
+			if(!app.endingSettings.showLeaderboard) {
+				//Draw a thought bubble
+				ctx.save();
+				ctx.translate(app.width * .53, app.height * .3);
 				ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
-			ctx.restore();
+				ctx.restore();
 
-			ctx.font = "26px Courier";
-			ctx.textAlign = "center";
-			ctx.fillStyle = "#000080";
-			ctx.fillText("Baby Horton coming November 2015!", app.width/2, app.height/7 + 70);
+				ctx.font = "26px Courier";
+				ctx.textAlign = "center";
+				ctx.fillStyle = "#000080";
+				ctx.fillText("Baby Horton coming November 2015!", app.width / 2, app.height / 7 + 70);
 
-			roundRect(ctx, app.width/2-app.endingSettings.nextButton.maxWidth *.5, app.height *.75-app.endingSettings.nextButton.height*1.25, app.endingSettings.nextButton.maxWidth, app.endingSettings.nextButton.height*2, 10, true, true);
+				roundRect(ctx, app.width / 2 - app.endingSettings.nextButton.maxWidth * .5, app.height * .75 - app.endingSettings.nextButton.height * 1.25, app.endingSettings.nextButton.maxWidth, app.endingSettings.nextButton.height * 2, 10, true, true);
 
-			ctx.font = app.endingSettings.nextButton.height + "px Courier";
-			ctx.textAlign = "center";
-			ctx.fillStyle = "#000080";
-			ctx.fillText("Play again?", app.width/2, app.height *.75, app.endingSettings.nextButton.maxWidth);
+				ctx.font = app.endingSettings.nextButton.height + "px Courier";
+				ctx.textAlign = "center";
+				ctx.fillStyle = "#000080";
+				ctx.fillText("Next", app.width / 2, app.height * .75, app.endingSettings.nextButton.maxWidth);
+			}
+			else {
+
+				roundRect(ctx, app.width *.28, 65, app.width *.44, app.height *.55, 10, true, true);
+
+				if(app.endingSettings.showSubmitButton) {
+					roundRect(ctx, app.width / 2 - app.endingSettings.submitScoreButton.maxWidth * .5, app.height * .75 - app.endingSettings.submitScoreButton.height * 1.25, app.endingSettings.submitScoreButton.maxWidth, app.endingSettings.submitScoreButton.height * 2, 10, true, true);
+
+					ctx.font = app.endingSettings.submitScoreButton.height + "px Courier";
+					ctx.textAlign = "center";
+					ctx.fillStyle = "#000080";
+					ctx.fillText("Submit", app.width / 2, app.height * .75, app.endingSettings.submitScoreButton.maxWidth);
+				}
+				else {
+					roundRect(ctx, app.width / 2 - app.endingSettings.playAgainButton.maxWidth * .5, app.height * .75 - app.endingSettings.playAgainButton.height * 1.25, app.endingSettings.playAgainButton.maxWidth, app.endingSettings.playAgainButton.height * 2, 10, true, true);
+
+					ctx.font = app.endingSettings.playAgainButton.height + "px Courier";
+					ctx.textAlign = "center";
+					ctx.fillStyle = "#000080";
+					ctx.fillText("Play again?", app.width / 2, app.height * .75, app.endingSettings.playAgainButton.maxWidth);
+				}
+			}
 		}
 	}
+}
+
+function drawButton(button) {
+	//TODO
 }
 
 
@@ -779,6 +838,7 @@ function onMouseDown(e) {
 		if (x>=leftSide && x<=rightSide && y>=topSide && y<=bottomSide) {
 			spawnItems(10);
 			app.state = 'play';
+			return;
 		}
 
 	}
@@ -812,18 +872,114 @@ function onMouseDown(e) {
 			app.speakerSettings.on = true;
 			currentMusic.play();
 		}
+		return;
 	}
 
 	//The Next button at the end
-	if(app.endingSettings.nextButton.ready) {
+	if(app.endingSettings.nextButton.ready && !app.endingSettings.showLeaderboard) {
 		var nleftSide = app.width/2 - app.endingSettings.nextButton.maxWidth/2;
 		var nrightSide = app.width/2 + app.endingSettings.nextButton.maxWidth/2;
 		var nbottomSide = app.height*3/4 + app.endingSettings.nextButton.height*1.25;
 		var ntopSide = app.height*3/4 - app.endingSettings.nextButton.height*1.25;
 
 		if (x>=nleftSide && x<=nrightSide && y>=ntopSide && y<=nbottomSide) {
+			app.endingSettings.showLeaderboard = true;
+			populateLeaderboard()
+			return;
+		}
+	}
+
+	//The submit button that shows if they made it to the high scores
+	if(app.endingSettings.showSubmitButton) {
+		var sleftSide = app.width/2 - app.endingSettings.submitScoreButton.maxWidth/2;
+		var srightSide = app.width/2 + app.endingSettings.submitScoreButton.maxWidth/2;
+		var sbottomSide = app.height*3/4 + app.endingSettings.submitScoreButton.height*1.25;
+		var stopSide = app.height*3/4 - app.endingSettings.submitScoreButton.height*1.25;
+
+		if (x>=sleftSide && x<=srightSide && y>=stopSide && y<=sbottomSide) {
+			app.endingSettings.showSubmitButton = false;
+			submitHighScore();
+			return;
+		}
+	}
+
+	//The Play Again button at the end
+	if(app.endingSettings.showLeaderboard) {
+		var pleftSide = app.width/2 - app.endingSettings.playAgainButton.maxWidth/2;
+		var prightSide = app.width/2 + app.endingSettings.playAgainButton.maxWidth/2;
+		var pbottomSide = app.height*3/4 + app.endingSettings.playAgainButton.height*1.25;
+		var ptopSide = app.height*3/4 - app.endingSettings.playAgainButton.height*1.25;
+
+		if (x>=pleftSide && x<=prightSide && y>=ptopSide && y<=pbottomSide) {
 			restartApp();
 		}
+	}
+}
+
+function clickIsInsideButton() {
+	//TODO
+}
+
+function submitHighScore() {
+	var scoreRow = $("#scoreRow" + (app.newScorePosition));
+	var enteredName = scoreRow.find(".highScoreName input").val();
+
+	if(enteredName == null || enteredName == "") {
+		enteredName = "Anonymous";
+	}
+
+	scoreRow.find(".highScoreName").html(enteredName);
+
+	var newLeader = {
+		name : enteredName,
+		score : app.score
+	};
+
+	$.ajax({
+		url : app.submitScoreUrl,
+		type : 'POST',
+		data : newLeader
+	});
+}
+
+function populateLeaderboard() {
+	if(typeof app.leaders !== "undefined") {
+		app.newScorePosition = -1;
+		for (var i = 0; i < app.leaders.length; i++) {
+			if (app.score >= app.leaders[i]["score"]) {
+				app.newScorePosition = i + 1;
+				break;
+			}
+		}
+
+		var scoreRowIndex = 0;
+		for (var j = 0; j < app.leaders.length; j++) {
+			scoreRowIndex++;
+			var currentScoreRow = $("#scoreRow" + scoreRowIndex);
+			//If this score row should be the new high score, we basically want to pretend this never happened and continue iterating over the leaders
+			//(and that's because in the case of this being the last time we would iterate over the list the last one would get left off otherwise)
+			if (scoreRowIndex == app.newScorePosition) {
+				currentScoreRow.find(".highScoreName").html("<input type=\"text\" maxlength=\"20\"/>");
+				currentScoreRow.find(".highScore").html(app.score);
+				j--;
+				continue;
+			}
+			currentScoreRow.find(".highScoreName").html(app.leaders[j]["name"]);
+			currentScoreRow.find(".highScore").html(app.leaders[j]["score"]);
+		}
+
+		if (app.newScorePosition != -1) {
+			app.endingSettings.showSubmitButton = true;
+		}
+		else if (app.newScorePosition == -1 && app.leaders.length < 10) {
+			app.newScorePosition = app.leaders.length + 1;
+			var scoreRow = $("#scoreRow" + app.newScorePosition);
+			scoreRow.find(".highScoreName").html("<input type=\"text\"/>");
+			scoreRow.find(".highScore").html(app.score);
+			app.endingSettings.showSubmitButton = true;
+		}
+
+		$(".leaderboard-container").show();
 	}
 }
 

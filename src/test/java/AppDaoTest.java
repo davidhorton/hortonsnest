@@ -1,4 +1,5 @@
 import com.dhorton.hortonsnest.data.AppDao;
+import com.dhorton.hortonsnest.data.Leader;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +31,10 @@ public class AppDaoTest {
 
     @Test
     public void test() {
-        dao.insertNewLeader("Testman McDuff", 44444);
+        Leader leader = new Leader();
+        leader.setName("Testman McDuff");
+        leader.setScore(44444);
+        dao.insertNewLeader(leader);
     }
 
 }

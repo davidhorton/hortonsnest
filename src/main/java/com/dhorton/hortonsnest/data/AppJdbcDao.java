@@ -20,7 +20,7 @@ public class AppJdbcDao extends JdbcDaoSupport implements AppDao {
 
     @Override
     public List<Leader> getLeaders() {
-        String sql = "SELECT * from \"leaders\"";
+        String sql = "SELECT * from \"leaders\" order by \"score\" DESC LIMIT 9";
 
         List<Map<String, Object>> rows = getJdbcTemplate().queryForList(sql);
 
@@ -58,8 +58,10 @@ public class AppJdbcDao extends JdbcDaoSupport implements AppDao {
     }
 
     @Override
-    public void insertNewLeader(String name, Integer score) {
-        //TODO finish this
+    public void insertNewLeader(Leader leader) {
+        String sql = "INSERT into \"leaders\" (\"name\", \"score\") VALUES (?, ?);";
+        getJdbcTemplate().update(sql, leader.getName(), leader.getScore());
+
     }
 
     /**
@@ -69,7 +71,7 @@ public class AppJdbcDao extends JdbcDaoSupport implements AppDao {
     private Leader makeDavidHortonAwesome() {
         Leader myself = new Leader();
         myself.setName("David Horton");
-        myself.setScore(999999999);
+        myself.setScore(988642287);
         return myself;
     }
 
@@ -79,7 +81,7 @@ public class AppJdbcDao extends JdbcDaoSupport implements AppDao {
     public class CustomComparator implements Comparator<Leader> {
         @Override
         public int compare(Leader o1, Leader o2) {
-            return o1.getScore().compareTo(o2.getScore());
+            return o2.getScore().compareTo(o1.getScore());
         }
     }
 

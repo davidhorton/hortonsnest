@@ -13,10 +13,14 @@ public class ViewModelFactory {
     @Autowired
     private AppDao dao;
 
+    @Autowired
+    private UrlBuilder urlBuilder;
+
     public ViewModel createViewModel() {
         ViewModel viewModel = new ViewModel();
         viewModel.setPageViews(dao.getAndIncrementSiteVisitCount());
-        viewModel.setLeaders(dao.getLeaders());
+        viewModel.setSubmitScoreUrl(urlBuilder.buildSubmitScoreUrl());
+        viewModel.setGetLeadersUrl(urlBuilder.buildGetLeadersUrl());
         return viewModel;
     }
 

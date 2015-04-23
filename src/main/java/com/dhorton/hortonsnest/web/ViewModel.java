@@ -1,21 +1,10 @@
 package com.dhorton.hortonsnest.web;
 
-import com.dhorton.hortonsnest.data.Leader;
-
-import java.util.List;
-
 public class ViewModel {
 
-    private List<Leader> leaders;
     private Integer pageViews;
-
-    public List<Leader> getLeaders() {
-        return leaders;
-    }
-
-    public void setLeaders(List<Leader> leaders) {
-        this.leaders = leaders;
-    }
+    private String submitScoreUrl;
+    private String getLeadersUrl;
 
     public Integer getPageViews() {
         return pageViews;
@@ -23,5 +12,21 @@ public class ViewModel {
 
     public void setPageViews(Integer pageViews) {
         this.pageViews = pageViews;
+    }
+
+    public String getSubmitScoreUrl() {
+        return submitScoreUrl;
+    }
+
+    public void setSubmitScoreUrl(String submitScoreUrl) {
+        this.submitScoreUrl = submitScoreUrl;
+    }
+
+    public String getGetLeadersUrl() {
+        return getLeadersUrl;
+    }
+
+    public void setGetLeadersUrl(String getLeadersUrl) {
+        this.getLeadersUrl = getLeadersUrl;
     }
 }

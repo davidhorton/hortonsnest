@@ -5,11 +5,44 @@
     <link rel="shortcut icon" href="resources/images/favicon.ico" />
     <script type="text/javascript" src="resources/js/game.js"></script>
     <script type="text/javascript" src="resources/js/jquery-1.11.2.min.js"></script>
+    <script type="text/javascript">
+        var submitScoreUrl = "{{viewModel.submitScoreUrl}}";
+        var getLeadersUrl = "{{viewModel.getLeadersUrl}}";
+    </script>
 </head>
-<body onload="startApp()">
-<canvas id="canvas" width="1000" tabindex="1" height="600">
-    How bold and cold to use a browser so old. What were you told?!
-</canvas>
+<body onload="startApp(submitScoreUrl, getLeadersUrl)">
+<div class="viewport">
+    <canvas id="canvas" class="viewport" width="1000" tabindex="1" height="600">
+        How bold and cold to use a browser so old. What were you told?!
+    </canvas>
+    <div class="leaderboard-container" style="display: none">
+        <p><strong>HIGH SCORES</strong></p>
+        <table class="leaderboard">
+            <col width="20%">
+            <col width="50%">
+            <col width="30%">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="scoreRow1"> <td>1</td> <td class="highScoreName"></td> <td class="highScore"></td></tr>
+                <tr id="scoreRow2"> <td>2</td> <td class="highScoreName"></td> <td class="highScore"></td></tr>
+                <tr id="scoreRow3"> <td>3</td> <td class="highScoreName"></td> <td class="highScore"></td></tr>
+                <tr id="scoreRow4"> <td>4</td> <td class="highScoreName"></td> <td class="highScore"></td></tr>
+                <tr id="scoreRow5"> <td>5</td> <td class="highScoreName"></td> <td class="highScore"></td></tr>
+                <tr id="scoreRow6"> <td>6</td> <td class="highScoreName"></td> <td class="highScore"></td></tr>
+                <tr id="scoreRow7"> <td>7</td> <td class="highScoreName"></td> <td class="highScore"></td></tr>
+                <tr id="scoreRow8"> <td>8</td> <td class="highScoreName"></td> <td class="highScore"></td></tr>
+                <tr id="scoreRow9"> <td>9</td> <td class="highScoreName"></td> <td class="highScore"></td></tr>
+                <tr id="scoreRow10"><td>10</td><td class="highScoreName"></td> <td class="highScore"></td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <div class="footer">
     <p>A David and Jessica Horton creation.</p>

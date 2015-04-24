@@ -34,7 +34,7 @@ function createApp() {
 		resumeButtonHeight : 20,
 
 		pregnancyCounter : {
-			weeks:0,
+			weeks:38,
 			days:0,
 			time:0
 		},
@@ -947,14 +947,14 @@ function submitHighScore() {
 	var scoreRow = $("#scoreRow" + (app.newScorePosition));
 	var enteredName = scoreRow.find(".highScoreName input").val();
 
-	if(enteredName == null || enteredName == "") {
+	if(enteredName == null || enteredName.trim() == "") {
 		enteredName = "Anonymous";
 	}
 
-	scoreRow.find(".highScoreName").html(enteredName);
+	scoreRow.find(".highScoreName").html(enteredName.trim());
 
 	var newLeader = {
-		name : enteredName,
+		name : enteredName.trim(),
 		score : app.score
 	};
 

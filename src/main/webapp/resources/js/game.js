@@ -16,10 +16,22 @@ function createApp() {
 		GOOD_ITEM_LIKELIHOOD : 0.6,
 		WEEKLY_BAD_INCREASE : 0.01,
 
-		keyboard_dx : 20,
+		keyboard_dx : 80,
 
 		startButtonMaxWidth : 125,
 		startButtonHeight : 20,
+
+		showHelpWindow : false,
+		showHelpButton : true,
+		helpButtonSettings : {
+			xPos : 85,
+			yPos : 22,
+			xSize : 40,
+			ySize : 50
+		},
+
+		resumeButtonMaxWidth : 125,
+		resumeButtonHeight : 20,
 
 		pregnancyCounter : {
 			weeks:0,
@@ -84,8 +96,7 @@ function createApp() {
 }
 
 //Start the magic
-function startApp(submitScoreUrl, getLeadersUrl)
-{
+function startApp(submitScoreUrl, getLeadersUrl) {
 	//This is information from the server
 	app.submitScoreUrl = submitScoreUrl;
 	app.getLeadersUrl = getLeadersUrl;
@@ -121,6 +132,7 @@ function startApp(submitScoreUrl, getLeadersUrl)
 	app.lilHortonInEgg = createImage("hortonHatchedEgg.png");
 	app.emptyHatchedEgg = createImage("emptyHatchedEgg.png");
 	app.elephantBird = createImage("elephantBird.png");
+	app.helpButtonImage = createImage("helpButton.png");
 
 	createItems();
 
@@ -273,8 +285,7 @@ function makeAudioRepeat(audio) {
 }
 
 //This is the animation loop
-function frameUpdate(timestamp)
-{
+function frameUpdate(timestamp) {
 	window.requestAnimationFrame(frameUpdate);
 
 	//Delta time calculation
@@ -285,7 +296,7 @@ function frameUpdate(timestamp)
 	app.lastTime = timestamp;
 
 	//Play sequence
-	if (app.state === 'play') {
+	if (app.state === 'play' && !app.showHelpWindow) {
 
 		//Increase the difficulty
 		app.difficulty += dt / 8;
@@ -302,6 +313,7 @@ function frameUpdate(timestamp)
 		//Start the ending sequence once it reaches 40 weeks
 		if (app.pregnancyCounter.weeks == 40) {
 			app.state = "finished";
+			app.showHelpButton = false;
 			app.endingSettings.phaseOneTimer = 0.1;
 			app.hitScreenShakeTimer = 0;
 			app.objects.length = 0;
@@ -458,24 +470,13 @@ function frameUpdate(timestamp)
 }
 
 //Draw the whole scene with each update
-function drawScene()
-{
+function drawScene() {
 	var ctx = app.ctx;
 
 	ctx.save();	//	save before screen shake or any other rendering
 
 	//Draw background
 	ctx.drawImage(app.backGroundImage, 0, 0, app.width, app.height);
-
-	//Draw speaker
-	var speakerImage;
-	if(app.speakerSettings.on) {
-		speakerImage = app.speakerOn;
-	}
-	else {
-		speakerImage = app.speakerOff;
-	}
-	ctx.drawImage(speakerImage, app.speakerSettings.xPos, app.speakerSettings.yPos, app.speakerSettings.xSize, app.speakerSettings.ySize);
 
 	//Screen shake
 	if (app.hitScreenShakeTimer > 0) {
@@ -501,9 +502,8 @@ function drawScene()
 		ctx.fillText(app.collisionMessage.message, app.width/2, 65);
 	}
 
-	//	draw objects
-	for (var i = 0; i < app.objects.length; i++)
-	{
+	//Draw objects
+	for (var i = 0; i < app.objects.length; i++) {
 		var o = app.objects[i];
 
 		//Don't draw horton outside of normal play state
@@ -522,8 +522,31 @@ function drawScene()
 	ctx.restore();
 
 	//Show score, depending on game state
-	if (app.state === 'play')
-	{
+	if(app.state === 'pre-play') {
+		//Draw a big happy elephant
+		ctx.save();
+		ctx.translate(app.width/7, app.height - 120);
+		ctx.drawImage(app.horton.image, -120, -120, 240, 240);
+		ctx.restore();
+
+		if(!app.showHelpWindow) {
+			//Draw a thought bubble
+			ctx.save();
+			ctx.translate(app.width * .53, app.height * .3);
+			ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
+			ctx.restore();
+
+			drawButton(app.startButtonMaxWidth, app.startButtonHeight, "Start!");
+
+			ctx.font = "22px Courier";
+			ctx.textAlign = "center";
+			ctx.fillStyle = "#000080";
+			ctx.fillText("Horton is hatching an egg! Help him catch all", app.width/2, app.height/7 + 35);
+			ctx.fillText("of the happy things so that he can prepare his", app.width/2, app.height/7 + 70);
+			ctx.fillText("nest before the elephant-bird hatches.", app.width/2, app.height/7 + 105);
+		}
+	}
+	else if (app.state === 'play') {
 		ctx.font = "italic 25px Courier";
 		ctx.textAlign = "center";
 		ctx.fillStyle = "#FFFF00";
@@ -537,33 +560,6 @@ function drawScene()
 		ctx.textAlign = "right";
 		ctx.fillText(app.pregnancyCounter.weeks + " " + (app.pregnancyCounter.weeks == 1 ? "week" : "weeks")
 		+ " and " + app.pregnancyCounter.days + " " + (app.pregnancyCounter.days == 1 ? "day" : "days"), app.width - 15, 40);
-	}
-	else if(app.state === 'pre-play') {
-		//Draw a big happy elephant
-		ctx.save();
-			ctx.translate(app.width/7, app.height - 120);
-			ctx.drawImage(app.horton.image, -120, -120, 240, 240);
-		ctx.restore();
-
-		//Draw a thought bubble
-		ctx.save();
-			ctx.translate(app.width *.53, app.height *.3);
-			ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
-		ctx.restore();
-
-		roundRect(ctx, app.width/2-app.startButtonMaxWidth *.5, app.height *.75-app.startButtonHeight*1.25, app.startButtonMaxWidth, app.startButtonHeight*2, 10, true, true);
-
-		ctx.font = "22px Courier";
-		ctx.textAlign = "center";
-		ctx.fillStyle = "#000080";
-		ctx.fillText("Horton is hatching an egg! Help him catch all", app.width/2, app.height/7 + 35);
-		ctx.fillText("of the happy things so that he can prepare his", app.width/2, app.height/7 + 70);
-		ctx.fillText("nest before the elephant-bird hatches.", app.width/2, app.height/7 + 105);
-
-		ctx.font = app.startButtonHeight + "px Courier";
-		ctx.textAlign = "center";
-		ctx.fillStyle = "#000080";
-		ctx.fillText("Start!", app.width/2, app.height *.75, app.startButtonMaxWidth)
 	}
 	else if(app.state === "finished") {
 		ctx.font = "italic 25px Courier";
@@ -661,6 +657,31 @@ function drawScene()
 			}
 		}
 	}
+
+	//These are all things that should be on top of everything else
+	//==============================================================
+	ctx.save();
+
+		//Draw speaker
+		var speakerImage;
+		if(app.speakerSettings.on) {
+			speakerImage = app.speakerOn;
+		}
+		else {
+			speakerImage = app.speakerOff;
+		}
+		ctx.drawImage(speakerImage, app.speakerSettings.xPos, app.speakerSettings.yPos, app.speakerSettings.xSize, app.speakerSettings.ySize);
+
+		//Draw the help button
+		if(app.showHelpButton) {
+			ctx.drawImage(app.helpButtonImage, app.helpButtonSettings.xPos, app.helpButtonSettings.yPos, app.helpButtonSettings.xSize, app.helpButtonSettings.ySize);
+		}
+
+		//Show the Help Window
+		if(app.showHelpWindow) {
+			drawButton(app.resumeButtonMaxWidth, app.resumeButtonHeight, "Back");
+		}
+	ctx.restore();
 }
 
 function drawButton(btnWidth, btnHeight, text) {
@@ -797,16 +818,14 @@ function onKeyDown(event) {
 
 
 function onMouseOrTouchMove(e) {
-	if (app.state === 'play')
-	{
+	if (app.state === 'play' && !app.showHelpWindow) {
+		var x;
 		if(e.offsetX) {
 			x = e.offsetX;
-			y = e.offsetY;
 		}
 		else {
 			var canvas = $('#canvas');
 			x = e.pageX - canvas.offset().left;
-			y = e.pageY - canvas.offset().top;
 		}
 
 		app.horton.pos.x = x;
@@ -816,7 +835,8 @@ function onMouseOrTouchMove(e) {
 function onMouseDown(e) {
 
 	//Get the x and y coordinates of the mouse click
-	var x = 0, y = 0;
+	var x = 0;
+	var y = 0;
 	if(e.offsetX) {
 		x = e.offsetX;
 		y = e.offsetY;
@@ -859,17 +879,39 @@ function onMouseDown(e) {
 		return;
 	}
 
+	//The Help button
+	if(app.showHelpButton) {
+		var helpLeftSide = app.helpButtonSettings.xPos;
+		var helpRightSide = app.helpButtonSettings.xPos + app.helpButtonSettings.xSize;
+		var helpBottomSide = app.helpButtonSettings.yPos + app.helpButtonSettings.ySize;
+		var helpTopSide = app.helpButtonSettings.yPos;
+
+		if (x>=helpLeftSide && x<=helpRightSide && y>=helpTopSide && y<=helpBottomSide) {
+			app.showHelpButton = false;
+			app.showHelpWindow = true;
+			app.hitScreenShakeTimer = 0;
+			return;
+		}
+	}
+
 	//The Start button
-	if(app.state === 'pre-play' && clickIsInsideButton(x, y, app.startButtonMaxWidth, app.startButtonHeight)) {
+	if(app.state === 'pre-play' && !app.showHelpWindow && clickIsInsideButton(x, y, app.startButtonMaxWidth, app.startButtonHeight)) {
 		spawnItems(10);
 		app.state = 'play';
+		return;
+	}
+
+	//The Resume button for when the Help window is being shown
+	if(app.showHelpWindow && clickIsInsideButton(x, y, app.resumeButtonMaxWidth, app.resumeButtonHeight)) {
+		app.showHelpButton = true;
+		app.showHelpWindow = false;
 		return;
 	}
 
 	//The Next button at the end
 	if(app.endingSettings.nextButton.ready && !app.endingSettings.showLeaderboard && clickIsInsideButton(x, y, app.endingSettings.nextButton.maxWidth, app.endingSettings.nextButton.height)) {
 		app.endingSettings.showLeaderboard = true;
-		populateLeaderboard()
+		populateLeaderboard();
 		return;
 	}
 

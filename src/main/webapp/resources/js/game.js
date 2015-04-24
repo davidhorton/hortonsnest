@@ -83,7 +83,7 @@ function createApp() {
 	};
 }
 
-//	init
+//Start the magic
 function startApp(submitScoreUrl, getLeadersUrl)
 {
 	//This is information from the server
@@ -102,11 +102,11 @@ function startApp(submitScoreUrl, getLeadersUrl)
 		}
 	});
 
-	//	set up our references to canvas and drawing context
+	//Get canvas and drawing context
 	app.canvas = document.getElementById('canvas');
 	app.ctx = app.canvas.getContext('2d');
 
-	//	convenient copies of canvas width and height for drawing purposes later
+	//For convenience because width and height are accessed so often
 	app.width = app.canvas.width;
 	app.height = app.canvas.height;
 
@@ -136,21 +136,23 @@ function startApp(submitScoreUrl, getLeadersUrl)
 	makeAudioRepeat(app.backgroundMusic);
 	app.backgroundMusic.play();
 
-	//	our master list of objects
+	//List of all animated objects
 	app.objects = [];
 
 	spawnHorton();
 
+	//Event listeners
 	app.canvas.addEventListener('mousemove', onMouseOrTouchMove, false);
 	app.canvas.addEventListener('touchmove', onMouseOrTouchMove, false);
 	app.canvas.addEventListener('keydown', onKeyDown, false);
 	app.canvas.addEventListener('mousedown', onMouseDown, false);
 
-	//	kick off our animation loop
+	//Kick off animation loop
 	window.requestAnimationFrame(frameUpdate);
 
 }
 
+//For when they hit the "Play Again" button. Reset everything.
 function restartApp() {
 	$(".leaderboard-container").hide();
 	$(".highScoreName").html("");
@@ -162,6 +164,7 @@ function restartApp() {
 	startApp(submitScoreUrl, getLeadersUrl);
 }
 
+//This instantiates each falling item with all the settings that define it
 function createItems() {
 	app.items = {
 		bottle : {
@@ -247,18 +250,21 @@ function createItems() {
 	}
 }
 
+//Utility function for getting an image from the webapp resources
 function createImage(filename) {
 	var image = new Image();
 	image.src = "resources/images/" + filename;
 	return image;
 }
 
+//Utility function for getting an audio file from the webapp resources
 function createAudio(filename) {
 	var audio = new Audio();
 	audio.src = "resources/audio/" + filename;
 	return audio;
 }
 
+//Makes it so an audio file is setup to repeat when it is playing
 function makeAudioRepeat(audio) {
 	audio.addEventListener('ended', function() {
 		this.currentTime = 0;
@@ -266,29 +272,34 @@ function makeAudioRepeat(audio) {
 	}, false);
 }
 
-//	update
+//This is the animation loop
 function frameUpdate(timestamp)
 {
-	window.requestAnimationFrame(frameUpdate);	//	trigger next update in the chain
+	window.requestAnimationFrame(frameUpdate);
 
-	//	delta time calculation
-	if (!app.lastTime)
+	//Delta time calculation
+	if (!app.lastTime) {
 		app.lastTime = timestamp;
+	}
 	var dt = (timestamp - app.lastTime)/1000;
 	app.lastTime = timestamp;
 
-	//	play sequence
+	//Play sequence
 	if (app.state === 'play') {
 
-		//difficulty
+		//Increase the difficulty
 		app.difficulty += dt / 8;
 
+		//The pregnancy counter is what shows in the top right corner
 		incrementPregnancyCounter(dt);
+
 		//Bump up (no pun intended!) the difficulty for the final stretch
 		if (app.pregnancyCounter.weeks >= 36 && !app.inFinalStretch) {
 			app.difficulty += dt * 1000;
 			app.inFinalStretch = true;
 		}
+
+		//Start the ending sequence once it reaches 40 weeks
 		if (app.pregnancyCounter.weeks == 40) {
 			app.state = "finished";
 			app.endingSettings.phaseOneTimer = 0.1;
@@ -296,7 +307,7 @@ function frameUpdate(timestamp)
 			app.objects.length = 0;
 		}
 
-		//	update screen shake timer, if there is one running
+		//Update screen shake timer, if there is one running
 		if (app.hitScreenShakeTimer > 0) {
 			app.hitScreenShakeTimer += dt;
 			if (app.hitScreenShakeTimer > app.SCREEN_SHAKE_MAX_TIME) {
@@ -304,7 +315,7 @@ function frameUpdate(timestamp)
 			}
 		}
 
-		//	update collision message timer, if there is one running
+		//Update collision message timer, if there is one running
 		if (app.collisionMessageTimer > 0) {
 			app.collisionMessageTimer += dt;
 			if (app.collisionMessageTimer > app.COLLISION_MESSAGE_MAX_TIME) {
@@ -312,24 +323,22 @@ function frameUpdate(timestamp)
 			}
 		}
 
-	}
-	if(app.state === 'play') {
-		//	object updating (movement, rotation, etc.)
+		//Object updating (movement, rotation, etc.)
 		for (var i = app.objects.length - 1; i >= 0; i--) {
 			var o = app.objects[i];
 
-			if (o.roll)	//	update roll/orientation
-			{
+			//Update roll/orientation
+			if (o.roll) {
 				o.angle += o.roll * dt;
 			}
 
 			if (o.type !== 'horton') {
 				if (o.speed) {
-					o.pos.y += o.speed * dt;	//	move item down the screen
+					o.pos.y += o.speed * dt;	//Move item down the screen
 				}
 
-				if (o.pos.y - o.ySize > app.height)	//	off bottom?
-				{
+				//If it's off the bottom, get rid of it and recreate it at the top
+				if (o.pos.y - o.ySize > app.height) {
 					//	remove and respawn at top
 					app.objects.splice(i, 1);
 					if(app.state === 'play') {
@@ -337,37 +346,41 @@ function frameUpdate(timestamp)
 					}
 				}
 
-				//	collision check
+				//Collision check
 				var dx = app.horton.pos.x - o.pos.x;
 				var dy = app.horton.pos.y - o.pos.y;
-				var dist = Math.sqrt(dx * dx + dy * dy);	//	distance formula
+				var dist = Math.sqrt(dx * dx + dy * dy);	//Use the distance formula
 
-				if(app.state === 'play') {
-					//This assumes that Horton's xSize is the same as his ySize (i.e. he's round)
-					if (dist < (app.horton.xSize * .6)) {
-						//	remove and respawn at top
-						app.objects.splice(i, 1);
-						spawnItem();
+				//This assumes that Horton's xSize is the same as his ySize (i.e. he's roundish)
+				if (dist < (app.horton.xSize * .6)) {
+					//	remove and respawn at top
+					app.objects.splice(i, 1);
+					spawnItem();
 
-						app.collisionMessageTimer = 0.1;
-						app.collisionMessage = {
-							message: o.msg + "  " + (o.goodGuy ? "+" : "") + o.points,
-							good: o.goodGuy
-						};
+					//Start the collision message timer
+					app.collisionMessageTimer = 0.1;
 
-						app.score += o.points;
+					//Show the collision message different for good guys or bad guys
+					app.collisionMessage = {
+						message: o.msg + "  " + (o.goodGuy ? "+" : "") + o.points,
+						good: o.goodGuy
+					};
 
-						if (!o.goodGuy) {
-							if (app.speakerSettings.on) {
-								app.hitSound.play();
-							}
-							app.hitScreenShakeTimer = 0.1;	//	start screen shake effect timer
+					//Change the score
+					app.score += o.points;
+
+					if (!o.goodGuy) {
+						if (app.speakerSettings.on) {
+							app.hitSound.play();
 						}
+						app.hitScreenShakeTimer = 0.1;	//	start screen shake effect timer
 					}
 				}
 			}
 		}
 	}
+
+	//Finished sequence
 	if(app.state === "finished") {
 		if(app.endingSettings.phaseOneTimer > 0) {
 			app.endingSettings.phaseOneTimer += dt;
@@ -440,11 +453,11 @@ function frameUpdate(timestamp)
 		}
 	}
 
-	//	re-draw everything once per update
+	//Re-draw everything once per update
 	drawScene();
 }
 
-//	draw
+//Draw the whole scene with each update
 function drawScene()
 {
 	var ctx = app.ctx;
@@ -464,9 +477,8 @@ function drawScene()
 	}
 	ctx.drawImage(speakerImage, app.speakerSettings.xPos, app.speakerSettings.yPos, app.speakerSettings.xSize, app.speakerSettings.ySize);
 
-	//	screen shake
-	if (app.hitScreenShakeTimer > 0)
-	{
+	//Screen shake
+	if (app.hitScreenShakeTimer > 0) {
 		ctx.translate(Math.random() * 20 - 5, Math.random() * 20 - 5);
 	}
 
@@ -494,11 +506,11 @@ function drawScene()
 	{
 		var o = app.objects[i];
 
-		//	don't draw horton outside of normal play state
+		//Don't draw horton outside of normal play state
 		if (o.type === 'horton' && app.state !== 'play')
 			continue;
 
-		//	draw object image, centered/rotated around its pos
+		//Draw object image, centered/rotated around its pos
 		ctx.save();
 			ctx.translate(o.pos.x, o.pos.y);
 			ctx.rotate(o.angle);
@@ -506,10 +518,10 @@ function drawScene()
 		ctx.restore();
 	}
 
-	//	done with all game world drawing - restore old ctx state
+	//Done with all game world drawing - restore old ctx state
 	ctx.restore();
 
-	//	show score, depending on game state
+	//Show score, depending on game state
 	if (app.state === 'play')
 	{
 		ctx.font = "italic 25px Courier";
@@ -589,6 +601,7 @@ function drawScene()
 			ctx.restore();
 		}
 
+		//This next section is to decide which phase we are in and to show the content specific to that phase
 		if(app.endingSettings.phaseThreeTimer > 0) {
 			//Draw a thought bubble
 			ctx.save();
@@ -631,45 +644,35 @@ function drawScene()
 				ctx.fillStyle = "#000080";
 				ctx.fillText("Baby Horton coming November 2015!", app.width / 2, app.height / 7 + 70);
 
-				roundRect(ctx, app.width / 2 - app.endingSettings.nextButton.maxWidth * .5, app.height * .75 - app.endingSettings.nextButton.height * 1.25, app.endingSettings.nextButton.maxWidth, app.endingSettings.nextButton.height * 2, 10, true, true);
-
-				ctx.font = app.endingSettings.nextButton.height + "px Courier";
-				ctx.textAlign = "center";
-				ctx.fillStyle = "#000080";
-				ctx.fillText("Next", app.width / 2, app.height * .75, app.endingSettings.nextButton.maxWidth);
+				drawButton(app.endingSettings.nextButton.maxWidth, app.endingSettings.nextButton.height, "Next");
 			}
 			else {
 
+				//Show the high score box
 				roundRect(ctx, app.width *.28, 65, app.width *.44, app.height *.55, 10, true, true);
 
+				//Show either the "Submit" button for the high scores or the "Play Again" button if they didn't make or already submitted
 				if(app.endingSettings.showSubmitButton) {
-					roundRect(ctx, app.width / 2 - app.endingSettings.submitScoreButton.maxWidth * .5, app.height * .75 - app.endingSettings.submitScoreButton.height * 1.25, app.endingSettings.submitScoreButton.maxWidth, app.endingSettings.submitScoreButton.height * 2, 10, true, true);
-
-					ctx.font = app.endingSettings.submitScoreButton.height + "px Courier";
-					ctx.textAlign = "center";
-					ctx.fillStyle = "#000080";
-					ctx.fillText("Submit", app.width / 2, app.height * .75, app.endingSettings.submitScoreButton.maxWidth);
+					drawButton(app.endingSettings.submitScoreButton.maxWidth, app.endingSettings.submitScoreButton.height, "Submit");
 				}
 				else {
-					roundRect(ctx, app.width / 2 - app.endingSettings.playAgainButton.maxWidth * .5, app.height * .75 - app.endingSettings.playAgainButton.height * 1.25, app.endingSettings.playAgainButton.maxWidth, app.endingSettings.playAgainButton.height * 2, 10, true, true);
-
-					ctx.font = app.endingSettings.playAgainButton.height + "px Courier";
-					ctx.textAlign = "center";
-					ctx.fillStyle = "#000080";
-					ctx.fillText("Play again?", app.width / 2, app.height * .75, app.endingSettings.playAgainButton.maxWidth);
+					drawButton(app.endingSettings.playAgainButton.maxWidth, app.endingSettings.playAgainButton.height, "Play again?");
 				}
 			}
 		}
 	}
 }
 
-function drawButton(button) {
-	//TODO
+function drawButton(btnWidth, btnHeight, text) {
+	roundRect(app.ctx, app.width / 2 - btnWidth * .5, app.height * .75 - btnHeight * 1.25, btnWidth, btnHeight * 2, 10, true, true);
+	app.ctx.font = btnHeight + "px Courier";
+	app.ctx.textAlign = "center";
+	app.ctx.fillStyle = "#000080";
+	app.ctx.fillText(text, app.width / 2, app.height * .75, btnWidth);
 }
 
 
-function spawnItem()
-{
+function spawnItem() {
 
 	var goodGuySelection = Math.random();
 	var goodGuy = goodGuySelection <= app.GOOD_ITEM_LIKELIHOOD;
@@ -734,17 +737,14 @@ function spawnItem()
 }
 
 
-function spawnItems(numberOfItems)
-{
-	for (var i = 0; i < numberOfItems; i++)
-	{
+function spawnItems(numberOfItems) {
+	for (var i = 0; i < numberOfItems; i++) {
 		spawnItem();
 	}
 }
 
 
-function spawnHorton()
-{
+function spawnHorton() {
 	app.horton = {
 		type : 'horton',
 		pos : {x:app.width/2, y: app.height - 60},
@@ -781,12 +781,12 @@ function onKeyDown(event) {
 
 	if(app.state === 'play') {
 		switch (event.keyCode) {
-			case 37:  /* Left arrow was pressed */
+			case 37:  //Left arrow was pressed
 				if (app.horton.pos.x - app.keyboard_dx > 0) {
 					app.horton.pos.x -= app.keyboard_dx;
 				}
 				break;
-			case 39:  /* Right arrow was pressed */
+			case 39:  //Right arrow was pressed
 				if (app.horton.pos.x + app.keyboard_dx < app.width) {
 					app.horton.pos.x += app.keyboard_dx;
 				}
@@ -815,8 +815,8 @@ function onMouseOrTouchMove(e) {
 
 function onMouseDown(e) {
 
+	//Get the x and y coordinates of the mouse click
 	var x = 0, y = 0;
-
 	if(e.offsetX) {
 		x = e.offsetX;
 		y = e.offsetY;
@@ -825,22 +825,6 @@ function onMouseDown(e) {
 		var canvas = $('#canvas');
 		x = e.pageX - canvas.offset().left;
 		y = e.pageY - canvas.offset().top;
-	}
-
-	//The Start button
-	if (app.state === 'pre-play')
-	{
-		var leftSide = app.width/2 - app.startButtonMaxWidth/2;
-		var rightSide = app.width/2 + app.startButtonMaxWidth/2;
-		var bottomSide = app.height*3/4 + app.startButtonHeight*1.25;
-		var topSide = app.height*3/4 - app.startButtonHeight*1.25;
-
-		if (x>=leftSide && x<=rightSide && y>=topSide && y<=bottomSide) {
-			spawnItems(10);
-			app.state = 'play';
-			return;
-		}
-
 	}
 
 	//The speaker button
@@ -875,49 +859,46 @@ function onMouseDown(e) {
 		return;
 	}
 
-	//The Next button at the end
-	if(app.endingSettings.nextButton.ready && !app.endingSettings.showLeaderboard) {
-		var nleftSide = app.width/2 - app.endingSettings.nextButton.maxWidth/2;
-		var nrightSide = app.width/2 + app.endingSettings.nextButton.maxWidth/2;
-		var nbottomSide = app.height*3/4 + app.endingSettings.nextButton.height*1.25;
-		var ntopSide = app.height*3/4 - app.endingSettings.nextButton.height*1.25;
+	//The Start button
+	if(app.state === 'pre-play' && clickIsInsideButton(x, y, app.startButtonMaxWidth, app.startButtonHeight)) {
+		spawnItems(10);
+		app.state = 'play';
+		return;
+	}
 
-		if (x>=nleftSide && x<=nrightSide && y>=ntopSide && y<=nbottomSide) {
-			app.endingSettings.showLeaderboard = true;
-			populateLeaderboard()
-			return;
-		}
+	//The Next button at the end
+	if(app.endingSettings.nextButton.ready && !app.endingSettings.showLeaderboard && clickIsInsideButton(x, y, app.endingSettings.nextButton.maxWidth, app.endingSettings.nextButton.height)) {
+		app.endingSettings.showLeaderboard = true;
+		populateLeaderboard()
+		return;
 	}
 
 	//The submit button that shows if they made it to the high scores
-	if(app.endingSettings.showSubmitButton) {
-		var sleftSide = app.width/2 - app.endingSettings.submitScoreButton.maxWidth/2;
-		var srightSide = app.width/2 + app.endingSettings.submitScoreButton.maxWidth/2;
-		var sbottomSide = app.height*3/4 + app.endingSettings.submitScoreButton.height*1.25;
-		var stopSide = app.height*3/4 - app.endingSettings.submitScoreButton.height*1.25;
-
-		if (x>=sleftSide && x<=srightSide && y>=stopSide && y<=sbottomSide) {
-			app.endingSettings.showSubmitButton = false;
-			submitHighScore();
-			return;
-		}
+	if(app.endingSettings.showSubmitButton && clickIsInsideButton(x, y, app.endingSettings.submitScoreButton.maxWidth, app.endingSettings.submitScoreButton.height)) {
+		app.endingSettings.showSubmitButton = false;
+		submitHighScore();
+		return;
 	}
 
 	//The Play Again button at the end
-	if(app.endingSettings.showLeaderboard) {
-		var pleftSide = app.width/2 - app.endingSettings.playAgainButton.maxWidth/2;
-		var prightSide = app.width/2 + app.endingSettings.playAgainButton.maxWidth/2;
-		var pbottomSide = app.height*3/4 + app.endingSettings.playAgainButton.height*1.25;
-		var ptopSide = app.height*3/4 - app.endingSettings.playAgainButton.height*1.25;
-
-		if (x>=pleftSide && x<=prightSide && y>=ptopSide && y<=pbottomSide) {
-			restartApp();
-		}
+	if(app.endingSettings.showLeaderboard && clickIsInsideButton(x, y, app.endingSettings.playAgainButton.maxWidth, app.endingSettings.playAgainButton.height)) {
+		restartApp();
 	}
 }
 
-function clickIsInsideButton() {
-	//TODO
+function clickIsInsideButton(clickX, clickY, btnWidth, btnHeight) {
+	var isInside = false;
+
+	var leftSide = app.width/2 - btnWidth/2;
+	var rightSide = app.width/2 + btnWidth/2;
+	var bottomSide = app.height*3/4 + btnHeight*1.25;
+	var topSide = app.height*3/4 - btnHeight*1.25;
+
+	if (clickX >= leftSide && clickX <= rightSide && clickY >= topSide && clickY <= bottomSide) {
+		isInside = true;
+	}
+
+	return isInside;
 }
 
 function submitHighScore() {

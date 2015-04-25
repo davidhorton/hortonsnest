@@ -34,7 +34,7 @@ function createApp() {
 		resumeButtonHeight : 20,
 
 		pregnancyCounter : {
-			weeks:38,
+			weeks:0,
 			days:0,
 			time:0
 		},
@@ -122,17 +122,18 @@ function startApp(submitScoreUrl, getLeadersUrl) {
 	app.height = app.canvas.height;
 
 	//Load images
-	app.hortonImage = createImage("horton.png");
-	app.backGroundImage = createImage("background.png");
-	app.eggInNest = createImage("eggInNest.png");
-	app.thoughtBubble = createImage("thoughtBubble.png");
-	app.speakerOn = createImage("speakerOn.png");
-	app.speakerOff = createImage("speakerOff.png");
-	app.emptyNest = createImage("emptyNest.png");
-	app.lilHortonInEgg = createImage("hortonHatchedEgg.png");
-	app.emptyHatchedEgg = createImage("emptyHatchedEgg.png");
-	app.elephantBird = createImage("elephantBird.png");
-	app.helpButtonImage = createImage("helpButton.png");
+	app.hortonImage = 		createImage("horton.png");
+	app.backGroundImage = 	createImage("background.png");
+	app.eggInNest = 		createImage("eggInNest.png");
+	app.thoughtBubble = 	createImage("thoughtBubble.png");
+	app.speakerOn = 		createImage("speakerOn.png");
+	app.speakerOff = 		createImage("speakerOff.png");
+	app.emptyNest = 		createImage("emptyNest.png");
+	app.lilHortonInEgg = 	createImage("hortonHatchedEgg.png");
+	app.emptyHatchedEgg = 	createImage("emptyHatchedEgg.png");
+	app.elephantBird = 		createImage("elephantBird.png");
+	app.helpButtonImage = 	createImage("helpButton.png");
+	app.helpPopup = 		createImage("helpPopup.png");
 
 	createItems();
 
@@ -631,8 +632,8 @@ function drawScene() {
 			if(!app.endingSettings.showLeaderboard) {
 				//Draw a thought bubble
 				ctx.save();
-				ctx.translate(app.width * .53, app.height * .3);
-				ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
+					ctx.translate(app.width * .53, app.height * .3);
+					ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
 				ctx.restore();
 
 				ctx.font = "26px Courier";
@@ -679,17 +680,31 @@ function drawScene() {
 
 		//Show the Help Window
 		if(app.showHelpWindow) {
-			drawButton(app.resumeButtonMaxWidth, app.resumeButtonHeight, "Back");
+
+			var helpPopupSettings = {
+					xPos : app.width *.1,
+					yPos : 10,
+					xSize : app.width *.78,
+					ySize : app.height *.85
+			};
+
+			roundRect(ctx, helpPopupSettings.xPos, helpPopupSettings.yPos, helpPopupSettings.xSize, helpPopupSettings.ySize, 10, true, true);
+			ctx.drawImage(app.helpPopup, helpPopupSettings.xPos, helpPopupSettings.yPos, helpPopupSettings.xSize, helpPopupSettings.ySize);
+			drawButton(app.resumeButtonMaxWidth, app.resumeButtonHeight, "Resume", app.height *.94);
 		}
 	ctx.restore();
 }
 
-function drawButton(btnWidth, btnHeight, text) {
-	roundRect(app.ctx, app.width / 2 - btnWidth * .5, app.height * .75 - btnHeight * 1.25, btnWidth, btnHeight * 2, 10, true, true);
+function drawButton(btnWidth, btnHeight, text, yPos) {
+	if(typeof yPos === "undefined") {
+		yPos = app.height * .75;
+	}
+
+	roundRect(app.ctx, app.width / 2 - btnWidth * .5, yPos - btnHeight * 1.25, btnWidth, btnHeight * 2, 10, true, true);
 	app.ctx.font = btnHeight + "px Courier";
 	app.ctx.textAlign = "center";
 	app.ctx.fillStyle = "#000080";
-	app.ctx.fillText(text, app.width / 2, app.height * .75, btnWidth);
+	app.ctx.fillText(text, app.width / 2, yPos, btnWidth);
 }
 
 
@@ -902,7 +917,7 @@ function onMouseDown(e) {
 	}
 
 	//The Resume button for when the Help window is being shown
-	if(app.showHelpWindow && clickIsInsideButton(x, y, app.resumeButtonMaxWidth, app.resumeButtonHeight)) {
+	if(app.showHelpWindow && clickIsInsideButton(x, y, app.resumeButtonMaxWidth, app.resumeButtonHeight, app.height *.94)) {
 		app.showHelpButton = true;
 		app.showHelpWindow = false;
 		return;
@@ -928,13 +943,18 @@ function onMouseDown(e) {
 	}
 }
 
-function clickIsInsideButton(clickX, clickY, btnWidth, btnHeight) {
+function clickIsInsideButton(clickX, clickY, btnWidth, btnHeight, yPos) {
+
+	if(typeof yPos === "undefined") {
+		yPos = app.height * .75;
+	}
+
 	var isInside = false;
 
 	var leftSide = app.width/2 - btnWidth/2;
 	var rightSide = app.width/2 + btnWidth/2;
-	var bottomSide = app.height*3/4 + btnHeight*1.25;
-	var topSide = app.height*3/4 - btnHeight*1.25;
+	var bottomSide = yPos + btnHeight*1.25;
+	var topSide = yPos - btnHeight*1.25;
 
 	if (clickX >= leftSide && clickX <= rightSide && clickY >= topSide && clickY <= bottomSide) {
 		isInside = true;

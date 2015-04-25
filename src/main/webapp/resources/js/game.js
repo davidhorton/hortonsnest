@@ -833,6 +833,8 @@ function onKeyDown(event) {
 
 
 function onMouseOrTouchMove(e) {
+	e.preventDefault();
+
 	if (app.state === 'play' && !app.showHelpWindow) {
 		var x;
 		if(e.offsetX) {

@@ -20,7 +20,7 @@ public class AppJdbcDao extends JdbcDaoSupport implements AppDao {
 
     @Override
     public List<Leader> getLeaders() {
-        String sql = "SELECT * from \"leaders\" order by \"score\" DESC LIMIT 9";
+        String sql = "SELECT * from \"leaders\" order by \"score\" DESC LIMIT 10";
 
         List<Map<String, Object>> rows = getJdbcTemplate().queryForList(sql);
 
@@ -36,8 +36,8 @@ public class AppJdbcDao extends JdbcDaoSupport implements AppDao {
         Collections.sort(leaders, new CustomComparator());
 
         ArrayList<Leader> trimmedLeaders = new ArrayList<>();
-        trimmedLeaders.add(makeDavidHortonAwesome());
-        for(int i = 0; i < 9 && i < leaders.size(); i++) {
+        //trimmedLeaders.add(makeDavidHortonAwesome());
+        for(int i = 0; i < 10 && i < leaders.size(); i++) {
             trimmedLeaders.add(leaders.get(i));
         }
 

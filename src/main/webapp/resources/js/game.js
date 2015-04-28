@@ -21,6 +21,13 @@ function createApp() {
 		startButtonMaxWidth : 125,
 		startButtonHeight : 20,
 
+		startHighScoreBtnWidth : 200,
+		startHighScoreBtnHeight : 20,
+		showStartHighScores : false,
+
+		startHighScoreResumeBtnWidth : 125,
+		startHighScoreResumeBtnHeight : 20,
+
 		showHelpWindow : false,
 		showHelpButton : true,
 		helpButtonSettings : {
@@ -167,14 +174,18 @@ function startApp(submitScoreUrl, getLeadersUrl) {
 
 //For when they hit the "Play Again" button. Reset everything.
 function restartApp() {
-	$(".leaderboard-container").hide();
-	$(".highScoreName").html("");
-	$(".highScore").html("");
-	app.finalMusic.pause();
+	clearLeaderboard();
 	var submitScoreUrl = app.submitScoreUrl;
 	var getLeadersUrl = app.getLeadersUrl;
 	app = createApp();
 	startApp(submitScoreUrl, getLeadersUrl);
+}
+
+function clearLeaderboard() {
+	$(".leaderboard-container").hide();
+	$(".highScoreName").html("");
+	$(".highScore").html("");
+	app.finalMusic.pause();
 }
 
 //This instantiates each falling item with all the settings that define it
@@ -531,20 +542,27 @@ function drawScene() {
 		ctx.restore();
 
 		if(!app.showHelpWindow) {
-			//Draw a thought bubble
-			ctx.save();
-			ctx.translate(app.width * .53, app.height * .3);
-			ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
-			ctx.restore();
+			if(app.showStartHighScores) {
+				roundRect(ctx, app.width *.28, 65, app.width *.44, app.height *.55, 10, true, true);
+				drawButton(app.startHighScoreResumeBtnWidth, app.startHighScoreResumeBtnHeight, "Back");
+			}
+			else {
+				//Draw a thought bubble
+				ctx.save();
+					ctx.translate(app.width * .53, app.height * .3);
+					ctx.drawImage(app.thoughtBubble, -500, -270, 900, 540);
+				ctx.restore();
 
-			drawButton(app.startButtonMaxWidth, app.startButtonHeight, "Start!");
+				drawButton(app.startButtonMaxWidth, app.startButtonHeight, "Start!", app.height * .68);
+				drawButton(app.startHighScoreBtnWidth, app.startHighScoreBtnHeight, "See High Scores", app.height *.8);
 
-			ctx.font = "22px Courier";
-			ctx.textAlign = "center";
-			ctx.fillStyle = "#000080";
-			ctx.fillText("Horton is hatching an egg! Help him catch all", app.width/2, app.height/7 + 35);
-			ctx.fillText("of the happy things so that he can prepare his", app.width/2, app.height/7 + 70);
-			ctx.fillText("nest before the elephant-bird hatches.", app.width/2, app.height/7 + 105);
+				ctx.font = "22px Courier";
+				ctx.textAlign = "center";
+				ctx.fillStyle = "#000080";
+				ctx.fillText("Horton is hatching an egg! Help him catch all", app.width/2, app.height/7 + 35);
+				ctx.fillText("of the happy things so that he can prepare his", app.width/2, app.height/7 + 70);
+				ctx.fillText("nest before the elephant-bird hatches.", app.width/2, app.height/7 + 105);
+			}
 		}
 	}
 	else if (app.state === 'play') {
@@ -906,15 +924,30 @@ function onMouseDown(e) {
 		if (x>=helpLeftSide && x<=helpRightSide && y>=helpTopSide && y<=helpBottomSide) {
 			app.showHelpButton = false;
 			app.showHelpWindow = true;
+			clearLeaderboard();
 			app.hitScreenShakeTimer = 0;
 			return;
 		}
 	}
 
 	//The Start button
-	if(app.state === 'pre-play' && !app.showHelpWindow && clickIsInsideButton(x, y, app.startButtonMaxWidth, app.startButtonHeight)) {
+	if(app.state === 'pre-play' && !app.showHelpWindow && !app.showStartHighScores && clickIsInsideButton(x, y, app.startButtonMaxWidth, app.startButtonHeight, app.height * .68)) {
 		spawnItems(10);
 		app.state = 'play';
+		return;
+	}
+
+	//The Start High Scores button
+	if(app.state == 'pre-play' && !app.showHelpWindow && !app.showStartHighScores && clickIsInsideButton(x, y, app.startHighScoreBtnWidth, app.startHighScoreBtnHeight, app.height * .8)) {
+		app.showStartHighScores = true;
+		populateLeaderboard(false);
+		return;
+	}
+
+	//The Start High Scores back button
+	if(app.state == 'pre-play' && !app.showHelpWindow && app.showStartHighScores && clickIsInsideButton(x, y, app.startHighScoreResumeBtnWidth, app.startHighScoreBtnHeight)) {
+		app.showStartHighScores = false;
+		clearLeaderboard();
 		return;
 	}
 
@@ -922,13 +955,14 @@ function onMouseDown(e) {
 	if(app.showHelpWindow && clickIsInsideButton(x, y, app.resumeButtonMaxWidth, app.resumeButtonHeight, app.height *.94)) {
 		app.showHelpButton = true;
 		app.showHelpWindow = false;
+		app.showStartHighScores = false;
 		return;
 	}
 
 	//The Next button at the end
 	if(app.endingSettings.nextButton.ready && !app.endingSettings.showLeaderboard && clickIsInsideButton(x, y, app.endingSettings.nextButton.maxWidth, app.endingSettings.nextButton.height)) {
 		app.endingSettings.showLeaderboard = true;
-		populateLeaderboard();
+		populateLeaderboard(true);
 		return;
 	}
 
@@ -987,7 +1021,7 @@ function submitHighScore() {
 	});
 }
 
-function populateLeaderboard() {
+function populateLeaderboard(isAtTheEnd) {
 	if(typeof app.leaders !== "undefined") {
 		app.newScorePosition = -1;
 		for (var i = 0; i < app.leaders.length; i++) {
@@ -1003,7 +1037,7 @@ function populateLeaderboard() {
 			var currentScoreRow = $("#scoreRow" + scoreRowIndex);
 			//If this score row should be the new high score, we basically want to pretend this never happened and continue iterating over the leaders
 			//(and that's because in the case of this being the last time we would iterate over the list the last one would get left off otherwise)
-			if (scoreRowIndex == app.newScorePosition) {
+			if (scoreRowIndex == app.newScorePosition && isAtTheEnd) {
 				currentScoreRow.find(".highScoreName").html("<input type=\"text\" maxlength=\"20\"/>");
 				currentScoreRow.find(".highScore").html(app.score);
 				j--;
@@ -1014,14 +1048,20 @@ function populateLeaderboard() {
 		}
 
 		if (app.newScorePosition != -1) {
-			app.endingSettings.showSubmitButton = true;
+			if(isAtTheEnd) {
+				app.endingSettings.showSubmitButton = true;
+			}
 		}
 		else if (app.newScorePosition == -1 && app.leaders.length < 10) {
 			app.newScorePosition = app.leaders.length + 1;
 			var scoreRow = $("#scoreRow" + app.newScorePosition);
 			scoreRow.find(".highScoreName").html("<input type=\"text\"/>");
 			scoreRow.find(".highScore").html(app.score);
-			app.endingSettings.showSubmitButton = true;
+
+			if(isAtTheEnd) {
+				app.endingSettings.showSubmitButton = true;
+			}
+
 		}
 
 		$(".leaderboard-container").show();

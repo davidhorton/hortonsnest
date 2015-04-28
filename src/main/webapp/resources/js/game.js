@@ -317,7 +317,7 @@ function frameUpdate(timestamp) {
 		incrementPregnancyCounter(dt);
 
 		//Bump up (no pun intended!) the difficulty for the final stretch
-		if (app.pregnancyCounter.weeks >= 36 && !app.inFinalStretch) {
+		if (app.pregnancyCounter.weeks >= 37 && !app.inFinalStretch) {
 			app.difficulty += dt * 1000;
 			app.inFinalStretch = true;
 		}

@@ -37,8 +37,12 @@ function createApp() {
 			ySize : 50
 		},
 
+		showMandatoryHelpWindow : false,
 		resumeButtonMaxWidth : 125,
 		resumeButtonHeight : 20,
+
+		playButtonMaxWidth : 130,
+		playButtonHeight : 20,
 
 		pregnancyCounter : {
 			weeks:0,
@@ -537,8 +541,8 @@ function drawScene() {
 	if(app.state === 'pre-play') {
 		//Draw a big happy elephant
 		ctx.save();
-		ctx.translate(app.width/7, app.height - 120);
-		ctx.drawImage(app.horton.image, -120, -120, 240, 240);
+			ctx.translate(app.width/7, app.height - 120);
+			ctx.drawImage(app.horton.image, -120, -120, 240, 240);
 		ctx.restore();
 
 		if(!app.showHelpWindow) {
@@ -697,7 +701,7 @@ function drawScene() {
 		}
 
 		//Show the Help Window
-		if(app.showHelpWindow) {
+		if(app.showHelpWindow || app.showMandatoryHelpWindow) {
 
 			var helpPopupSettings = {
 					xPos : app.width *.1,
@@ -708,7 +712,13 @@ function drawScene() {
 
 			roundRect(ctx, helpPopupSettings.xPos, helpPopupSettings.yPos, helpPopupSettings.xSize, helpPopupSettings.ySize, 10, true, true);
 			ctx.drawImage(app.helpPopup, helpPopupSettings.xPos, helpPopupSettings.yPos, helpPopupSettings.xSize, helpPopupSettings.ySize);
-			drawButton(app.resumeButtonMaxWidth, app.resumeButtonHeight, "Resume", app.height *.94);
+
+			if(app.showMandatoryHelpWindow) {
+				drawButton(app.playButtonMaxWidth, app.playButtonHeight, "Play!", app.height *.94);
+			}
+			else {
+				drawButton(app.resumeButtonMaxWidth, app.resumeButtonHeight, "Resume", app.height *.94);
+			}
 		}
 	ctx.restore();
 }
@@ -915,7 +925,7 @@ function onMouseDown(e) {
 	}
 
 	//The Help button
-	if(app.showHelpButton) {
+	if(app.showHelpButton && !app.showMandatoryHelpWindow) {
 		var helpLeftSide = app.helpButtonSettings.xPos;
 		var helpRightSide = app.helpButtonSettings.xPos + app.helpButtonSettings.xSize;
 		var helpBottomSide = app.helpButtonSettings.yPos + app.helpButtonSettings.ySize;
@@ -931,21 +941,28 @@ function onMouseDown(e) {
 	}
 
 	//The Start button
-	if(app.state === 'pre-play' && !app.showHelpWindow && !app.showStartHighScores && clickIsInsideButton(x, y, app.startButtonMaxWidth, app.startButtonHeight, app.height * .68)) {
+	if(app.state === 'pre-play' && !app.showHelpWindow && !app.showStartHighScores && !app.showMandatoryHelpWindow && clickIsInsideButton(x, y, app.startButtonMaxWidth, app.startButtonHeight, app.height * .68)) {
+		app.showMandatoryHelpWindow = true;
+		return;
+	}
+
+	//The Play button
+	if(app.showMandatoryHelpWindow && clickIsInsideButton(x, y, app.playButtonMaxWidth, app.playButtonHeight, app.height *.94)) {
+		app.showMandatoryHelpWindow = false;
 		spawnItems(10);
 		app.state = 'play';
 		return;
 	}
 
 	//The Start High Scores button
-	if(app.state == 'pre-play' && !app.showHelpWindow && !app.showStartHighScores && clickIsInsideButton(x, y, app.startHighScoreBtnWidth, app.startHighScoreBtnHeight, app.height * .8)) {
+	if(app.state == 'pre-play' && !app.showHelpWindow && !app.showStartHighScores && !app.showMandatoryHelpWindow && clickIsInsideButton(x, y, app.startHighScoreBtnWidth, app.startHighScoreBtnHeight, app.height * .8)) {
 		app.showStartHighScores = true;
 		populateLeaderboard(false);
 		return;
 	}
 
 	//The Start High Scores back button
-	if(app.state == 'pre-play' && !app.showHelpWindow && app.showStartHighScores && clickIsInsideButton(x, y, app.startHighScoreResumeBtnWidth, app.startHighScoreBtnHeight)) {
+	if(app.state == 'pre-play' && !app.showHelpWindow && app.showStartHighScores && !app.showMandatoryHelpWindow && clickIsInsideButton(x, y, app.startHighScoreResumeBtnWidth, app.startHighScoreBtnHeight)) {
 		app.showStartHighScores = false;
 		clearLeaderboard();
 		return;
